@@ -84,6 +84,8 @@ set_board_size(N):- N >=2, asserta(board_size(N)).
 % set_player_symbol(+P,+S) tiene éxito si P es un jugador válido, S es un símbolo válido y no hay una partida iniciada,
 %	actualizando el tamaño del tablero a N.
 
+set_player_symbol(P,_):- var(P), throw('Jugador no instanciado').
+set_player_symbol(_,S):- var(S), throw('Simbolo no instanciado').
 set_player_symbol(P, S) :- valid_player(P), valid_symbol(S), asserta(symbol(P, S)).
 
 valid_player(P) :- member(P, [player_A, player_B]), !.
