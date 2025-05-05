@@ -1,7 +1,32 @@
+:-	dynamic
+			idioma/1,			    % Idioma en el que se forma
+			modo/1,                 % Modo de juego: pvp o pve
+			reparto/1,              % Modo en el que se reparten las fichas
+			empieza/1,              % Indica que jugador empezará
+            puntuacion/2,           % Guarda la puntuación asociada con cada jugador
+            empezado/1.             % Indica si hay una partida en progreso (0: no, 1: si)
+
+% Opciones de configuración
+:- assertz(idioma('Español')).			% Idioma por defecto: Español
+:- assertz(modo(pve)).	                % Modo por defecto: pve
+:- assertz(reparto('aleatorio')).	    % Modo en el que se reparten las fichas por defecto: aleatorio
+:- assertz(empezado(0)).		    % Indica que jugador empezará por defecto: jugador 1
+
+:- assertz(puntuacion('player_1', 0)).  % Indica con que puntuación empezara el jugador 1: 0
+:- assertz(puntuacion('player_2', 0)).  % Indica con que puntuación empezara el jugador 2: 0
+:- assertz(puntuacion('player_2', 0)).  % Indica con que puntuación empezara el jugador 2: 0
+
+
 % ver_opcion(+O) muestra el valor establecido en el apartado de configuración O. Si el apartado de configuración O no existe, la llamada termina en error.
+ver_opcion(idioma):- idioma(A), write(A), !.
+ver_opcion(modo):- modo(A), write(A), !.
+ver_opcion(reparto):- reparto(A), write(A), !.
+ver_opcion(empieza):- empieza(A), write(A), !.
+ver_opcion(_):- throw('Error esa opcion no existe').
 
 % Si no hay ninguna partida iniciada, establecer_opcion(+O,+V) establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
 % de configuración O no existe o bien si el valor V no se corresponde con el apartado de configuración O, entonces la llamada termina en error.
+establecer_opcion(+O,+V):-
 
 % iniciar_partida(+J) (modo persona vs maquina) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
 % entonces la llamada termina en error.
