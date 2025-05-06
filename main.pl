@@ -1,21 +1,40 @@
 :-	dynamic
-			idioma/1,			    % Idioma en el que se forma
+			idioma/1,		% Idioma en el que se forma
 			modo/1,                 % Modo de juego: pvp o pve
 			reparto/1,              % Modo en el que se reparten las fichas
 			empieza/1,              % Indica que jugador empezará
-            puntuacion/2,           % Guarda la puntuación asociada con cada jugador
-            empezado/1.             % Indica si hay una partida en progreso (0: no, 1: si)
+
+            		puntuacion/2,           % Guarda la puntuación asociada con cada jugador
+            		empezado/1.             % Indica si hay una partida en progreso (0: no, 1: si)
 
 % Opciones de configuración
-:- assertz(idioma('Español')).			% Idioma por defecto: Español
-:- assertz(modo(pve)).	                % Modo por defecto: pve
-:- assertz(reparto('aleatorio')).	    % Modo en el que se reparten las fichas por defecto: aleatorio
-:- assertz(empezado(0)).		    % Indica que jugador empezará por defecto: jugador 1
+:- assertz(idioma(español)).		% Idioma por defecto: Español
+:- assertz(modo(pve)).	            	% Modo por defecto: pve
+:- assertz(reparto(aleatorio)).	    	% Modo en el que se reparten las fichas por defecto: aleatorio
+:- assertz(empieza(0)).		    	% Indica que jugador empezará por defecto: jugador 1
 
 :- assertz(puntuacion('player_1', 0)).  % Indica con que puntuación empezara el jugador 1: 0
 :- assertz(puntuacion('player_2', 0)).  % Indica con que puntuación empezara el jugador 2: 0
-:- assertz(puntuacion('player_2', 0)).  % Indica con que puntuación empezara el jugador 2: 0
+:- assertz(empezado(0)).			% Indica que la partida todavia no ha empezado
 
+%==========Predicados para comprobar que las nuevas opciones son correctas============
+opcionesIdioma(euskera).
+opcionesIdioma(español).
+opcionesIdioma(ingles).
+opcionesIdioma(_):- throw('No existe ese idioma').
+
+
+opcionesModo(pve).
+opcionesModo(pvp).
+opcionesModo(_):- throw('No existe ese modo de juego').
+
+opcionesReparto(aleatorio).
+opcionesReparto(manual).
+opcionesReparto(_):- throw('No existe ese modo de reparto').
+
+opcionesEmpieza(0).
+opcionesEmpieza(1).
+opcionesEmpieza(_):- throw('No existe ese modo de inicio').
 
 % ver_opcion(+O) muestra el valor establecido en el apartado de configuración O. Si el apartado de configuración O no existe, la llamada termina en error.
 ver_opcion(idioma):- idioma(A), write(A), !.
@@ -26,7 +45,11 @@ ver_opcion(_):- throw('Error esa opcion no existe').
 
 % Si no hay ninguna partida iniciada, establecer_opcion(+O,+V) establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
 % de configuración O no existe o bien si el valor V no se corresponde con el apartado de configuración O, entonces la llamada termina en error.
-establecer_opcion(+O,+V):-
+establecer_opcion(O,A):- empezado(0), O=idioma, opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)).
+establecer_opcion(O,A):- empezado(0), O=modo, opcionesModo(A), retract(modo(_)), asserta(modo(A)).
+establecer_opcion(O,A):- empezado(0), O=reparto, opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)).
+establecer_opcion(O,A):- empezado(0), O=empieza, opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)).
+establecer_opcion(_._):- empezado(1), throw('No se pueden cambiar las opciones de configuracion mientras hay una partida en curso').
 
 % iniciar_partida(+J) (modo persona vs maquina) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
 % entonces la llamada termina en error.
@@ -41,9 +64,6 @@ establecer_opcion(+O,+V):-
 % desde la fila F y la columna C y suma los puntos correspondientes al jugador J. Si no hay una partida iniciada, no es el turno del jugador J, la palabra 
 % P no encaja en orientación O desde la fila F y la columna C o bien el jugador J no dispone de las fichas necesarias para formar la palabra P, entonces la 
 % llamada finaliza en error.
-
-% Si hay una partida iniciada y es el turno del jugador J, pasar_turno(+J) pasa el turno al siguiente jugador. Si no hay una partida iniciada o bien no es 
-% el turno del jugador J, entonces la llamada finaliza en error.
 
 % Si hay una partida iniciada y el jugador J acaba de formar una palabra o bien la partida acaba de iniciarse, asignar_fichas(+J,+F) entrega al jugador J las 
 % fichas F. En el caso del modo de juego persona vs máquina, el jugador máquina será identificado mediante ‘ordenador’. Si no hay una partida iniciada, el 
@@ -66,4 +86,5 @@ establecer_opcion(+O,+V):-
 
 % ver_ranking muestra dos listas de jugadores: en la primera, junto a cada nombre de jugador aparece su número y porcentaje de partidas ganadas, y los jugadores 
 % aparecen ordenados de manera descendente según el porcentaje de victorias; en la segunda, junto a cada nombre de jugador aparece su puntuación máxima y media, 
-% y los jugadores aparecen ordenados de manera descendente según su puntuación media.
+% y los jugadores aparecen ordenados de manera descendente según su puntuación media
+
