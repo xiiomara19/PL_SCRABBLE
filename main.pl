@@ -42,6 +42,9 @@ establecer_opcion(+O,+V):-
 % P no encaja en orientación O desde la fila F y la columna C o bien el jugador J no dispone de las fichas necesarias para formar la palabra P, entonces la 
 % llamada finaliza en error.
 
+% Si hay una partida iniciada y es el turno del jugador J, pasar_turno(+J) pasa el turno al siguiente jugador. Si no hay una partida iniciada o bien no es 
+% el turno del jugador J, entonces la llamada finaliza en error.
+
 % Si hay una partida iniciada y el jugador J acaba de formar una palabra o bien la partida acaba de iniciarse, asignar_fichas(+J,+F) entrega al jugador J las 
 % fichas F. En el caso del modo de juego persona vs máquina, el jugador máquina será identificado mediante ‘ordenador’. Si no hay una partida iniciada, el 
 % jugador J no acaba de formar una palabra o no acaba de iniciarse la partida, las fichas F no forman parte de las que faltan por repartir o bien no son el 
