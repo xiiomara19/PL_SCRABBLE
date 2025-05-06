@@ -12,8 +12,8 @@
 % create_board(+N,-B) tiene éxito si B es una matriz (lista de listas) de tamaño N
 
 create_board(N,B):-
-		length(B,N),
-		maplist(same_length(B),B).
+	length(Row, N), maplist(=(''), Row), % Crea una fila con N elementos vacíos
+    length(B, N), maplist(=(Row), B).    % Repite esa fila N veces para crear la matriz
 
 %%% write_board(+B,+N) tiene éxito si B es una matriz (lista de listas) de tamaño N, y escribe su contenido en pantalla
 
@@ -21,7 +21,7 @@ write_board(B,N):-
 		length(B,N),
 		maplist(same_length(B),B),
 		!,
-		W is 2*N+1,
+		W is 4*N+1,
 		length(L,W),
 		maplist(=('-'),L),
 		atom_chars(S,L),
@@ -44,12 +44,21 @@ write_cell(C):- (member(C, ['X', 'O', '']) -> write(C); throw('Valor de celda in
 
 % start_new_game tiene éxito siempre y establece el inicio de una nueva partida
 
-%start_new_game:- asserta()
+start_new_game:- 
+	retractall(board_size(_)), retractall(next_round(_)),							% Eliminamos toda la informacion a cerca de la partida anterior
+	asserta(board_size(3)), board_size(N), create_board(N,B),						% Ponemos el tamaño por defecto de la tabla y la creamos
+	asserta(next_round(player_A)), write_board(B,N), write_next_round(player_A). 	% Asignamos la primera ronda a player_A, mostramos la tabla y especificamos su turno
 
 % play_A(+R,+C) tiene éxito si el R y C son índices de fila y columna válidos, si la celda (R,C) está vacía y si el siguiente turno es del jugador A
 %	Actualiza el tablero, comprueba si la partida ha finalizado y/o cambia el turno
 
-%play_A(R,C):-
+play_A(R,_):- board_size(N), R>N, throw('Fila invalida').
+play_A(_,C):- board_size(N), C>N, throw('Columna invalida').
+play_A(R,C):-
+	board_size(N), R=<N, C=<N, 		% R Y C son indices de la fila
+	board(B), 
+	next_round(player_A),			% Verificamos que es el turno de player_A
+	symbol(R, S), 	
 
 % play_B(+R,+C) tiene éxito si el R y C son índices de fila y columna válidos, si la celda (R,C) está vacía y si el siguiente turno es del jugador B
 %	Actualiza el tablero, comprueba si la partida ha finalizado y/o cambia el turno
@@ -58,7 +67,7 @@ write_cell(C):- (member(C, ['X', 'O', '']) -> write(C); throw('Valor de celda in
 
 % update_round(+B,+CR,+NR) tiene éxito siempre, comprueba si la partida ha finalizado y/o cambia el turno de CR a NR
 
-%update_round(B,CR,NR):-
+%update_round(B,CR,NR):-	
 
 % is_win(+B,+N,+S) tiene éxito si hay una línea con el símbolo S en el tablero B de tamaño N
 
@@ -77,6 +86,7 @@ write_winner(player_B):- write("El jugador B es el ganador").
 % set_board_size(+N) tiene éxito si N es un número mayor o igual que 2 y no hay partida iniciada,
 %	actualizando el tamaño del tablero a N
 
+set_board_size(N):- var(N), throw('Tamaño no instanciado').
 set_board_size(N):- N <2, throw('Numero no valido').
 set_board_size(N):- N >=2, asserta(board_size(N)).
 
