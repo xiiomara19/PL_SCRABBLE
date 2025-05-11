@@ -1,5 +1,7 @@
 # PL_SCRABBLE
 
+**Autores:** Asier Aguilar y Xiomara Cáceres
+
 ## Objetivos
 
 - Desarrollar una aplicación en **Prolog** completamente funcional que implemente un juego de mesa sobre palabras.
@@ -10,3 +12,4 @@
   - Entrada/salida y ficheros.
   - Predicados all-solutions e iteradores.
   - Predicados dinámicos
+  
