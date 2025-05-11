@@ -4,17 +4,19 @@
 			reparto/1,              % Modo en el que se reparten las fichas
 			empieza/1,              % Indica que jugador empezará
 
-            		puntuacion/2,           % Guarda la puntuación asociada con cada jugador
-            		empezado/1.             % Indica si hay una partida en progreso (0: no, 1: si)
+			puntuacion/2,           % Guarda la puntuación asociada con cada jugador
+			empezado/1.             % Indica si hay una partida en progreso (0: no, 1: si)
 
 % Opciones de configuración
-:- assertz(idioma(español)).		% Idioma por defecto: Español
-:- assertz(modo(pve)).	            	% Modo por defecto: pve
+:- assertz(idioma(español)).			% Idioma por defecto: Español
+:- assertz(modo(pve)).	            	% Modo de juego por defecto: pve
 :- assertz(reparto(aleatorio)).	    	% Modo en el que se reparten las fichas por defecto: aleatorio
-:- assertz(empieza(0)).		    	% Indica que jugador empezará por defecto: jugador 1
+:- assertz(empieza(0)).		    		% Modo de inicio de partida: normal
+:- assertz(initial_round('player_1')).	% Jugador que empieza la partida: player_1
+:- assertz(next_round(end)).			% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
 
 :- assertz(puntuacion('player_1', 0)).  % Indica con que puntuación empezara el jugador 1: 0
-:- assertz(puntuacion('player_2', 0)).  % Indica con que puntuación empezara el jugador 2: 0
+:- assertz(puntuacion(maquina, 0)).  % Indica con que puntuación empezara la máquina: 0
 :- assertz(empezado(0)).			% Indica que la partida todavia no ha empezado
 
 %==========Predicados para comprobar que las nuevas opciones son correctas============
@@ -45,20 +47,39 @@ ver_opcion(_):- throw('Error esa opcion no existe').
 
 % Si no hay ninguna partida iniciada, establecer_opcion(+O,+V) establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
 % de configuración O no existe o bien si el valor V no se corresponde con el apartado de configuración O, entonces la llamada termina en error.
-establecer_opcion(O,A):- empezado(0), O=idioma, opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)).
-establecer_opcion(O,A):- empezado(0), O=modo, opcionesModo(A), retract(modo(_)), asserta(modo(A)).
-establecer_opcion(O,A):- empezado(0), O=reparto, opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)).
-establecer_opcion(O,A):- empezado(0), O=empieza, opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)).
-establecer_opcion(_._):- empezado(1), throw('No se pueden cambiar las opciones de configuracion mientras hay una partida en curso').
+establecer_opcion(_,_):- empezado(1), throw('No se pueden cambiar las opciones de configuracion mientras hay una partida en curso').
+establecer_opcion(idioma,A):- empezado(0), opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)), !.
+establecer_opcion(modo,A):- empezado(0), opcionesModo(A), retract(modo(_)), asserta(modo(A)), !.
+establecer_opcion(reparto,A):- empezado(0),  opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)), !.
+establecer_opcion(empieza,A):- empezado(0), opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)), !.
+establecer_opcion(O,_):- throw('No existe el apartado de configuracion especificado').
 
 % iniciar_partida(+J) (modo persona vs maquina) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
 % entonces la llamada termina en error.
 
+%TO-DO: ver lo del modo de juego y cambiar el initial_round al otro si el modo de juego es 0
+iniciar_partida(_):- empezado(1), throw('Ya hay una partida iniciada').
+iniciar_partida(_):- modo(pvp), throw('Modo de juego incorrecto, se esperaba pve').
+iniciar_partida(J):- empezado(0), modo(pve), J =  /= '_maquina', retractall(empezado(_)), asserta(empezado(1)), retractall(empieza(_)), asserta(empieza(1)), 
+			retractall(puntuacion(J, _)), retractall(puntuacion('_maquina', _)) asserta(puntuacion(J , 0)), asserta(puntuacion('_maquina', 0)).
+
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
 
+%TO-DO: ver lo del modo de juego y cambiar el initial_round al otro si el modo de juego es 0
+iniciar_partida(_,_):- empezado(1), throw('Ya hay una partida iniciada').
+iniciar_partida(_,_):- modo(pve), throw('Modo de juego incorrecto, se esperaba pvp').
+iniciar_partida(J1, J2):- empezado(0), modo(pvp), retractall(empezado(_)), asserta(empezado(1)), retractall(empieza(_)), asserta(empieza(1)), 
+			retractall(puntuacion(J1, _)), retractall(puntuacion(J2, _)) asserta(puntuacion(J1 , 0)), asserta(puntuacion(J2, 0)).
+
 % Si hay una partida iniciada, abandonar_partida(+J) da la partida por perdida para el jugador J. Si no hay ninguna partida iniciada o bien el jugador J 
 % no está jugando, entonces la llamada termina en error.
+abandonar_partida(_):- empezado(0), throw('No hay ninguna partida iniciada').
+abandonar_partida(J):- empezado(1),  next_round(end), retract(puntuacion(player_1, P)), retract(puntuacion(maquina, _)), asserta(puntuacion(maquina, P)), 
+			retractall(empezado(_)), asserta(empezado(0)), !, write('El jugador se ha rendido').
+abandonar_partida(J):- empezado(1), next_round(end), retract(puntuacion(player_1, P)), retract(puntuacion(player_2, _)), asserta(puntuacion(player_2, P)),
+			retractall(empezado(_)), asserta(empezado(0)), !, write('El jugador se ha rendido').
+abandonar_partida(_):- throw('El jugador no está jugando').
 
 %  Si hay una partida iniciada y es el turno del jugador J, formar_palabra(+J,+O,+F,+C,+P) introduce la palabra P en orientación O (horizontal o vertical) 
 % desde la fila F y la columna C y suma los puntos correspondientes al jugador J. Si no hay una partida iniciada, no es el turno del jugador J, la palabra 
