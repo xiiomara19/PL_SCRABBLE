@@ -61,7 +61,7 @@ establecer_opcion(O,_):- throw('No existe el apartado de configuracion especific
 iniciar_partida(_):- empezado(1), throw('Ya hay una partida iniciada').
 iniciar_partida(_):- modo(pvp), throw('Modo de juego incorrecto, se esperaba pve').
 iniciar_partida(J):- empezado(0), modo(pve), J =  /= '_maquina', retractall(empezado(_)), asserta(empezado(1)), retractall(empieza(_)), asserta(empieza(1)), 
-			retractall(puntuacion(J, _)), retractall(puntuacion('_maquina', _)) asserta(puntuacion(J , 0)), asserta(puntuacion('_maquina', 0)).
+			retractall(puntuacion(J, _)), retractall(puntuacion('_maquina', _)), asserta(puntuacion(J , 0)), asserta(puntuacion('_maquina', 0)).
 
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
@@ -70,7 +70,7 @@ iniciar_partida(J):- empezado(0), modo(pve), J =  /= '_maquina', retractall(empe
 iniciar_partida(_,_):- empezado(1), throw('Ya hay una partida iniciada').
 iniciar_partida(_,_):- modo(pve), throw('Modo de juego incorrecto, se esperaba pvp').
 iniciar_partida(J1, J2):- empezado(0), modo(pvp), retractall(empezado(_)), asserta(empezado(1)), retractall(empieza(_)), asserta(empieza(1)), 
-			retractall(puntuacion(J1, _)), retractall(puntuacion(J2, _)) asserta(puntuacion(J1 , 0)), asserta(puntuacion(J2, 0)).
+			retractall(puntuacion(J1, _)), retractall(puntuacion(J2, _)), asserta(puntuacion(J1 , 0)), asserta(puntuacion(J2, 0)).
 
 % Si hay una partida iniciada, abandonar_partida(+J) da la partida por perdida para el jugador J. Si no hay ninguna partida iniciada o bien el jugador J 
 % no está jugando, entonces la llamada termina en error.
@@ -108,4 +108,24 @@ abandonar_partida(_):- throw('El jugador no está jugando').
 % ver_ranking muestra dos listas de jugadores: en la primera, junto a cada nombre de jugador aparece su número y porcentaje de partidas ganadas, y los jugadores 
 % aparecen ordenados de manera descendente según el porcentaje de victorias; en la segunda, junto a cada nombre de jugador aparece su puntuación máxima y media, 
 % y los jugadores aparecen ordenados de manera descendente según su puntuación media
+
+
+% escribir_tablero
+%mostrar_tablero
+% actualizar_tablero
+
+
+% jugar_A
+% jugar_B
+% jugar_maquina (MAS ADELANTE)
+
+% calcular_puntos
+
+% validar_palabra (existe la palabra en el diccionario)
+% validar_palabraCompuesta (se añade "palabra" nueva a una palabra existente y se comprueba si existe)
+
+% validar_fichas (tiene las fichas necesarias para formar la palabra)
+% validar_posicion (la palabra encaja en el tablero)
+
+
 
