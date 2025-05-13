@@ -7,7 +7,7 @@
 			empezado/1,             	% Indica si hay una partida en progreso (0: no, 1: si)
 			initial_round/1, 			% Jugador que empieza la partida: player_1 o player_2
 			next_round/1,				% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
-			historial_puntuaciones/2.	% Guarda el historial de puntuaciones de los jugadores
+			historial_puntuaciones/3.	% Guarda el historial de puntuaciones de los jugadores
 
 % Opciones de configuración
 :- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
@@ -21,8 +21,8 @@
 :- assertz(puntuacion(maquina, 0)).  	% Indica con que puntuación empezara el jugador 2 (la máquina): 0
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
-:-assertz(historial_puntuaciones(player,0)).	% Historial de puntuaciones del jugador 1
-:-assertz(historial_puntuaciones(maquina,0)).	% Historial de puntuaciones del jugador 2 (la máquina)
+:-assertz(historial_puntuaciones(player,0,w)).	% Historial de puntuaciones del jugador 1 y si ha ganado o perdido
+:-assertz(historial_puntuaciones(maquina,0,l)).	% Historial de puntuaciones del jugador 2 (la máquina) y si ha ganado o perdido
 
 
 
@@ -145,7 +145,6 @@ mostrar_item(C):- write(C), write('|').
 % actualizar_tablero
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% JUGABILIDAD %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % iniciar_partida(+J) (modo persona vs maquina) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
 % entonces la llamada termina en error.
@@ -239,7 +238,16 @@ mostrar_puntuacion:-
 %   b) Resumen de las palabras formadas, los puntos obtenidos con cada una y las fichas disponibles en cada turno.
 % Si no hay una partida iniciada, entonces la llamada termina en error.
 
+%TO-DO: Apartado B!! Resumen de las palabras formadas, los puntos obtenidos con cada una y las fichas disponibles en cada turno.
+ver_resumen:- empezado(0), throw('No hay ninguna partida iniciada').
+ver_resumen:- 
+	empezado(1),																													% Comprobamos que hay una partida iniciada
+	opcionesEmpieza(E), opcionesModo(M), opcionesReparto(R), opcionesIdioma(I),														% Obtenemos las opciones de configuración
+	format('Modo de juego: ~w~n', [M]), format('Idioma: ~w~n', [I]), format('Reparto: ~w~n', [R]), format('Empieza: ~w~n', [E]). 	% Mostramos las opciones de configuración
+
+
 % ver_historial(+J) muestra el historial del jugador J: número de victorias y derrotas, puntuación máxima y puntuación media.
+
 
 % ver_ranking muestra dos listas de jugadores: en la primera, junto a cada nombre de jugador aparece su número y porcentaje de partidas ganadas, y los jugadores 
 % aparecen ordenados de manera descendente según el porcentaje de victorias; en la segunda, junto a cada nombre de jugador aparece su puntuación máxima y media, 
