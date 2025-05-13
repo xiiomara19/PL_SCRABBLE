@@ -12,14 +12,14 @@
 
 % create_board(+N,-B) tiene éxito si B es una matriz (lista de listas) de tamaño N
 
-create_board(N,B):-
+create_board2(N,B):-
 		length(B,N),
 		maplist(same_length(B),B).
 
 
 %%% write_board(+B,+N) tiene éxito si B es una matriz (lista de listas) de tamaño N, y escribe su contenido en pantalla
 
-write_board(B,N):-
+write_board2(B,N):-
 		length(B,N),
 		maplist(same_length(B),B),
 		!,
@@ -30,7 +30,7 @@ write_board(B,N):-
 		maplist(write_row(S),B),
 		write(S),
 		nl.
-write_board(N,B):-
+write_board2(N,B):-
 		throw(board_size_error(N,B)).
 
 % write_row(+S,+R) tiene éxito siempre, y escribe en pantalla el contenido de la lista R tras escribir S

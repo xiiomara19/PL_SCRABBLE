@@ -68,11 +68,12 @@ iniciar_partida(player):-
 	empezado(0), retractall(empezado(_)), asserta(empezado(1)), 					% Comprobamos que no haya una partida iniciada y la iniciamos
 	modo(pve),																		% Comprobamos que el modo de juego es pve
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores	
-	asserta(puntuacion(player, 0)),	asserta(puntuacion(maquina, 0)),					% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
+	asserta(puntuacion(player, 0)),	asserta(puntuacion(maquina, 0)),				% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
 	(
 		initial_round(player) -> retractall(next_round(_)), asserta(next_round(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
-		retractall(next_round(_)), asserta(next_round(maquina))										% Comprobamos que la máquina empieza la partida y lo asignamos
-	).
+		retractall(next_round(_)), asserta(next_round(maquina))									% Comprobamos que la máquina empieza la partida y lo asignamos
+	),
+	crear_tablero(B), mostrar_tablero(B).											% Creamos el tablero y lo mostramos por pantalla	
 
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
@@ -87,7 +88,8 @@ iniciar_partida(player_1, player_2):-
 	(
 		initial_round(player_1) -> retractall(next_round(_)), asserta(next_round(player_1));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(next_round(_)), asserta(next_round(player_2))										% Comprobamos que el jugador 2 empieza la partida y lo asignamos
-	).
+	),
+	crear_tablero(B), mostrar_tablero(B).											% Creamos el tablero y lo mostramos por pantalla	
 
 % Si hay una partida iniciada, abandonar_partida(+J) da la partida por perdida para el jugador J. Si no hay ninguna partida iniciada o bien el jugador J 
 % no está jugando, entonces la llamada termina en error.
@@ -147,8 +149,95 @@ otro_jugador(maquina, player).
 % y los jugadores aparecen ordenados de manera descendente según su puntuación media
 
 
-% escribir_tablero
+%crear_matriz tiene exito si es una matriz de conjuntos especificando su valor y letra
+
+
+% crear_tablero(+TableroFinal) tiene éxito si TableroFinal es una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
+% especial o estar vacía.
+crear_tablero(TableroFinal) :-
+    crear_tablero_base(TableroVacio),				% Crear el tablero vacío
+    celdas_especiales(PosicionesEspeciales),		% Obtener las posiciones de las celdas especiales
+    insertar_celdas_especiales(PosicionesEspeciales, TableroVacio, TableroFinal).
+
+crear_tablero_base(B):-
+	length(Row, 15), maplist(=('(''SC'', )'), Row), % Crea una fila con N elementos vacíos
+    length(B, 15), maplist(=(Row), B).    % Repite esa fila N veces para crear la matriz
+
+set_cell(F, C, V, BoardIn, BoardOut) :-
+    nth0(F, BoardIn, OldRow),
+    replace_nth0(C, OldRow, V, NewRow),
+    replace_nth0(F, BoardIn, NewRow, BoardOut).
+
+replace_nth0(Index, List, Elem, NewList) :-
+	same_length(List, NewList),
+    append(Prefix, [_|Suffix], List),
+    length(Prefix, Index),
+    append(Prefix, [Elem|Suffix], NewList).
+
+insertar_celdas_especiales([], Board, Board).
+insertar_celdas_especiales([(F,C,V)|T], BoardIn, BoardOut) :-
+    set_cell(F, C, V, BoardIn, BoardTemp),
+    insertar_celdas_especiales(T, BoardTemp, BoardOut).
+
+insertar_celdas_simples([], Board, Board).
+insertar_celdas_simples([H|T], BoardIn, BoardOut) :-
+	set_cell(H, H, 'S', BoardIn, BoardTemp),
+	insertar_celdas_simples(T, BoardTemp, BoardOut).
+
+
+obtener_posiciones_vacias([], []).
+obtener_posiciones_vacias([Fila | Rest], Posiciones) :-
+    obtener_posiciones_vacias_fila(Fila, 0, 0, PosicionesFila),  % Buscar en la fila
+    obtener_posiciones_vacias(Rest, PosicionesRest),
+    append(PosicionesFila, PosicionesRest, Posiciones).
+
+obtener_posiciones_vacias_fila([], _, _, []).
+obtener_posiciones_vacias_fila([Celda | Rest], F, C, [(F, C) | PosRest]) :-
+    Celda = 'S',  % Si la celda está vacía (es 'S')
+    C1 is C + 1,
+    obtener_posiciones_vacias_fila(Rest, F, C1, PosRest).
+obtener_posiciones_vacias_fila([_ | Rest], F, C, PosRest) :-
+    C1 is C + 1,
+    obtener_posiciones_vacias_fila(Rest, F, C1, PosRest).
+	
 % mostrar_tablero
+mostrar_tablero(B):-
+		length(B,15),
+		maplist(same_length(B),B),
+		!,
+		W is 9*15+1,
+		length(L,W),
+		maplist(=('-'),L),
+		atom_chars(S,L),
+		maplist(escribir_fila(S),B),
+		write(S),
+		nl.
+
+% escribir_fila
+escribir_fila(S,R):- write(S), nl, write('|'), maplist(write_item, R), nl .
+
+write_item(C):- write(C), write('|').
+
+% celdas_especiales(+C) tiene éxito si C es una lista de celdas especiales, donde cada celda especial es una tupla (F,C,T) que indica la fila F, la columna C y 
+% el tipo T de la celda especial. Hay cyatro tipos de celdas especiales:
+% 	1. TP (Triple Palabra): multiplica por 3 la puntuación de la palabra formada en esa celda.
+% 	2. DP (Doble Palabra): multiplica por 2 la puntuación de la palabra formada en esa celda.
+% 	3. TL (Triple Letra): multiplica por 3 la puntuación de la letra colocada en esa celda.
+% 	4. DL (Doble Letra): multiplica por 2 la puntuación de la letra colocada en esa celda.
+celdas_especiales([
+    (0, 0, '(''TP'', )'), (0, 7, '(''TP'', )'), (0,14, '(''TP'', )'),
+    (7, 0, '(''TP'', )'), (7,14, '(''TP'', )'),
+    (14, 0,'(''TP'', )'), (14,7,'(''TP'', )'), (14,14,'(''TP'', )'),
+
+    (1, 1, '(''DP'', )'), (2, 2, '(''DP'', )'), (3, 3, '(''DP'', )'),
+    (4, 4, '(''DP'', )'), (10,10,'(''DP'', )'), (11,11,'(''DP'', )'),
+    (12,12,'(''DP'', )'), (13,13,'(''DP'', )'),
+
+    (1, 5, '(''TL'', )'), (5, 1, '(''TL'', )'), (5, 5, '(''TL'', )'), (5, 9, '(''TL'', )'), (9, 5, '(''TL'', )'),
+
+    (0, 3, '(''DL'', )'), (2, 6, '(''DL'', )'), (3, 0, '(''DL'', )'), (3, 7, '(''DL'', )'), (3,14, '(''DL'', )')
+]).
+
 % actualizar_tablero
 
 
