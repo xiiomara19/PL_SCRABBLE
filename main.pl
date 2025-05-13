@@ -24,6 +24,9 @@
 :-assertz(historial_puntuaciones(player,0)).	% Historial de puntuaciones del jugador 1
 :-assertz(historial_puntuaciones(maquina,0)).	% Historial de puntuaciones del jugador 2 (la máquina)
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CONFIGURACION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %==========Predicados para comprobar que las nuevas opciones son correctas============
 opcionesIdioma(eu).
 opcionesIdioma(es).
@@ -59,6 +62,91 @@ establecer_opcion(reparto,A):- empezado(0),  opcionesReparto(A), retract(reparto
 establecer_opcion(empieza,A):- empezado(0), opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)), !.
 establecer_opcion(_,_):- throw('No existe el apartado de configuracion especificado').
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TABLERO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% crear_tablero(-TableroFinal) tiene éxito si TableroFinal es una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
+% especial o estar vacía.
+crear_tablero(TableroFinal) :-
+    crear_tablero_base(TableroVacio),				% Crear el tablero vacío
+    celdas_especiales(PosEspeciales),		% Obtener las posiciones de las celdas especiales
+    insertar_celdas_especiales(PosEspeciales, TableroVacio, TableroFinal).
+
+% crear_tablero_base(-B) tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador 'SC').
+crear_tablero_base(B):-
+	length(Row, 15), maplist(=('(''SC'', )'), Row), 	% Crea una fila con N elementos vacíos
+    length(B, 15), maplist(=(Row), B).    				% Repite esa fila N veces para crear la matriz
+
+% celdas_especiales(+C) tiene éxito si C es una lista de celdas especiales, donde cada celda especial es una tupla (F,C,T) que indica la fila F, la columna C y 
+% el tipo T de la celda especial. Hay cuatro tipos de celdas especiales:
+% 	1. TP (Triple Palabra): multiplica por 3 la puntuación de la palabra formada en esa celda.
+% 	2. DP (Doble Palabra): multiplica por 2 la puntuación de la palabra formada en esa celda.
+% 	3. TL (Triple Letra): multiplica por 3 la puntuación de la letra colocada en esa celda.
+% 	4. DL (Doble Letra): multiplica por 2 la puntuación de la letra colocada en esa celda.
+celdas_especiales([
+    (0, 0, '(''TP'', )'), (0, 7, '(''TP'', )'), (0,14, '(''TP'', )'),
+    (7, 0, '(''TP'', )'), (7,14, '(''TP'', )'),
+    (14, 0,'(''TP'', )'), (14,7,'(''TP'', )'), (14,14,'(''TP'', )'),
+
+    (1, 1, '(''DP'', )'), (2, 2, '(''DP'', )'), (3, 3, '(''DP'', )'),
+    (4, 4, '(''DP'', )'), (10,10,'(''DP'', )'), (11,11,'(''DP'', )'),
+    (12,12,'(''DP'', )'), (13,13,'(''DP'', )'),
+
+    (1, 5, '(''TL'', )'), (5, 1, '(''TL'', )'), (5, 5, '(''TL'', )'), (5, 9, '(''TL'', )'), (9, 5, '(''TL'', )'),
+
+    (0, 3, '(''DL'', )'), (2, 6, '(''DL'', )'), (3, 0, '(''DL'', )'), (3, 7, '(''DL'', )'), (3,14, '(''DL'', )')
+]).
+
+% insertar_celdas_especiales(+C,+BoardIn,-BoardOut) tiene éxito si BoardOut es el tablero BoardIn con las celdas especiales de C insertadas.
+insertar_celdas_especiales([], Board, Board).
+insertar_celdas_especiales([(F,C,V)|T], BoardIn, BoardOut) :-
+    set_cell(F, C, V, BoardIn, BoardTemp),
+    insertar_celdas_especiales(T, BoardTemp, BoardOut).
+
+% set_cell(+F,+C,+V,+BoardIn,-BoardOut) tiene éxito si BoardOut es el tablero BoardIn con la celda (F,C) reemplazada por el valor V.
+set_cell(F, C, V, BoardIn, BoardOut) :-
+    % Extraer la fila en posición F
+    append(TopRows, [OldRow|BottomRows], BoardIn),
+    length(TopRows, F),
+
+    % Reemplazar la columna C en esa fila
+    reemplazar_celda(C, OldRow, V, NewRow),
+
+    % Reinsertar la nueva fila en la matriz
+    append(TopRows, [NewRow|BottomRows], BoardOut).
+
+
+reemplazar_celda(C, RowIn, NewValue, RowOut) :-
+    append(Left, [_|Right], RowIn),
+    length(Left, C),
+    append(Left, [NewValue|Right], RowOut).
+	
+% mostrar_tablero(+B) tiene éxito si B es una matriz (lista de listas) de tamaño 15, y escribe su contenido en pantalla
+mostrar_tablero(B):-
+		length(B,15),
+		maplist(same_length(B),B),
+		!,
+		W is 9*15+1,
+		length(L,W),
+		maplist(=('-'),L),
+		atom_chars(S,L),
+		maplist(mostrar_fila(S),B),
+		write(S),
+		nl.
+	
+mostrar_tablero(_):- throw('El tablero no es de tamaño 15x15').
+
+% mostrar_fila (+S,+R) tiene éxito siempre, y escribe en pantalla el contenido de la lista R tras escribir S
+mostrar_fila(S,R):- write(S), nl, write('|'), maplist(mostrar_item, R), nl .
+
+% mostrar_item(+C) tiene éxito siempre y escribe su valor en pantalla
+mostrar_item(C):- write(C), write('|').
+
+% actualizar_tablero
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% JUGABILIDAD %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % iniciar_partida(+J) (modo persona vs maquina) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
 % entonces la llamada termina en error.
 
@@ -149,96 +237,6 @@ otro_jugador(maquina, player).
 % y los jugadores aparecen ordenados de manera descendente según su puntuación media
 
 
-%crear_matriz tiene exito si es una matriz de conjuntos especificando su valor y letra
-
-
-% crear_tablero(+TableroFinal) tiene éxito si TableroFinal es una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
-% especial o estar vacía.
-crear_tablero(TableroFinal) :-
-    crear_tablero_base(TableroVacio),				% Crear el tablero vacío
-    celdas_especiales(PosicionesEspeciales),		% Obtener las posiciones de las celdas especiales
-    insertar_celdas_especiales(PosicionesEspeciales, TableroVacio, TableroFinal).
-
-crear_tablero_base(B):-
-	length(Row, 15), maplist(=('(''SC'', )'), Row), % Crea una fila con N elementos vacíos
-    length(B, 15), maplist(=(Row), B).    % Repite esa fila N veces para crear la matriz
-
-set_cell(F, C, V, BoardIn, BoardOut) :-
-    nth0(F, BoardIn, OldRow),
-    replace_nth0(C, OldRow, V, NewRow),
-    replace_nth0(F, BoardIn, NewRow, BoardOut).
-
-replace_nth0(Index, List, Elem, NewList) :-
-	same_length(List, NewList),
-    append(Prefix, [_|Suffix], List),
-    length(Prefix, Index),
-    append(Prefix, [Elem|Suffix], NewList).
-
-insertar_celdas_especiales([], Board, Board).
-insertar_celdas_especiales([(F,C,V)|T], BoardIn, BoardOut) :-
-    set_cell(F, C, V, BoardIn, BoardTemp),
-    insertar_celdas_especiales(T, BoardTemp, BoardOut).
-
-insertar_celdas_simples([], Board, Board).
-insertar_celdas_simples([H|T], BoardIn, BoardOut) :-
-	set_cell(H, H, 'S', BoardIn, BoardTemp),
-	insertar_celdas_simples(T, BoardTemp, BoardOut).
-
-
-obtener_posiciones_vacias([], []).
-obtener_posiciones_vacias([Fila | Rest], Posiciones) :-
-    obtener_posiciones_vacias_fila(Fila, 0, 0, PosicionesFila),  % Buscar en la fila
-    obtener_posiciones_vacias(Rest, PosicionesRest),
-    append(PosicionesFila, PosicionesRest, Posiciones).
-
-obtener_posiciones_vacias_fila([], _, _, []).
-obtener_posiciones_vacias_fila([Celda | Rest], F, C, [(F, C) | PosRest]) :-
-    Celda = 'S',  % Si la celda está vacía (es 'S')
-    C1 is C + 1,
-    obtener_posiciones_vacias_fila(Rest, F, C1, PosRest).
-obtener_posiciones_vacias_fila([_ | Rest], F, C, PosRest) :-
-    C1 is C + 1,
-    obtener_posiciones_vacias_fila(Rest, F, C1, PosRest).
-	
-% mostrar_tablero
-mostrar_tablero(B):-
-		length(B,15),
-		maplist(same_length(B),B),
-		!,
-		W is 9*15+1,
-		length(L,W),
-		maplist(=('-'),L),
-		atom_chars(S,L),
-		maplist(escribir_fila(S),B),
-		write(S),
-		nl.
-
-% escribir_fila
-escribir_fila(S,R):- write(S), nl, write('|'), maplist(write_item, R), nl .
-
-write_item(C):- write(C), write('|').
-
-% celdas_especiales(+C) tiene éxito si C es una lista de celdas especiales, donde cada celda especial es una tupla (F,C,T) que indica la fila F, la columna C y 
-% el tipo T de la celda especial. Hay cyatro tipos de celdas especiales:
-% 	1. TP (Triple Palabra): multiplica por 3 la puntuación de la palabra formada en esa celda.
-% 	2. DP (Doble Palabra): multiplica por 2 la puntuación de la palabra formada en esa celda.
-% 	3. TL (Triple Letra): multiplica por 3 la puntuación de la letra colocada en esa celda.
-% 	4. DL (Doble Letra): multiplica por 2 la puntuación de la letra colocada en esa celda.
-celdas_especiales([
-    (0, 0, '(''TP'', )'), (0, 7, '(''TP'', )'), (0,14, '(''TP'', )'),
-    (7, 0, '(''TP'', )'), (7,14, '(''TP'', )'),
-    (14, 0,'(''TP'', )'), (14,7,'(''TP'', )'), (14,14,'(''TP'', )'),
-
-    (1, 1, '(''DP'', )'), (2, 2, '(''DP'', )'), (3, 3, '(''DP'', )'),
-    (4, 4, '(''DP'', )'), (10,10,'(''DP'', )'), (11,11,'(''DP'', )'),
-    (12,12,'(''DP'', )'), (13,13,'(''DP'', )'),
-
-    (1, 5, '(''TL'', )'), (5, 1, '(''TL'', )'), (5, 5, '(''TL'', )'), (5, 9, '(''TL'', )'), (9, 5, '(''TL'', )'),
-
-    (0, 3, '(''DL'', )'), (2, 6, '(''DL'', )'), (3, 0, '(''DL'', )'), (3, 7, '(''DL'', )'), (3,14, '(''DL'', )')
-]).
-
-% actualizar_tablero
 
 
 % jugar_A
