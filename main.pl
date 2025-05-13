@@ -225,6 +225,15 @@ otro_jugador(maquina, player).
 
 %  Si hay una partida iniciada, mostrar_puntuación muestra la puntuación de ambos jugadores. Si no hay una partida iniciada, entonces la llamada termina en error.
 
+mostrar_puntuacion:- empezado(0), throw('No hay ninguna partida iniciada').
+mostrar_puntuacion:- 
+	empezado(1),																% Comprobamos que hay una partida iniciada
+	(
+		modo(pvp) -> puntuacion(player, P1), puntuacion(maquina, P2);			% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2 (la máquina)
+		puntuacion(player_1, P1), puntuacion(player_2, P2),						% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2
+	),
+	format('Puntuación del jugador 1: ~w~n', [P1]), format('Puntuación del jugador 2: ~w~n', [P2]). 	
+	
 % Si hay una partida iniciada, ver_resumen muestra un resumen de la partida actual que incluye:
 %   a) Configuración de la partida.
 %   b) Resumen de las palabras formadas, los puntos obtenidos con cada una y las fichas disponibles en cada turno.
