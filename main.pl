@@ -163,8 +163,10 @@ reemplazar_celda(C, RowIn, NewValue, RowOut) :-
     length(Left, C),
     append(Left, [NewValue|Right], RowOut).
 
-
-% get_cell(+F,+C,+B,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
+%QUITAR B DE AQUI Y USAR EL DINAMICO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%get_cell(+F,+C,+B,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
 get_cell(F,C,B,R):- 
 	X is F+1,
 	nth1(X,B,Fila),
@@ -204,6 +206,7 @@ mostrar_item(C):- atom_chars(C,L), length(L,X), X is 1, write('  '), write(C), w
 iniciar_partida(_):- empezado(1), throw('Ya hay una partida iniciada').
 iniciar_partida(_):- modo(pvp), throw('Modo de juego incorrecto, se esperaba pve').
 iniciar_partida(player):- 
+	cargar_diccionario(es),
 	empezado(0), retractall(empezado(_)), asserta(empezado(1)), 					% Comprobamos que no haya una partida iniciada y la iniciamos
 	modo(pve),																		% Comprobamos que el modo de juego es pve
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores	
@@ -212,7 +215,7 @@ iniciar_partida(player):-
 		ronda_inicial(player) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(maquina))									% Comprobamos que la máquina empieza la partida y lo asignamos
 	),
-	crear_tablero, mostrar_tablero.											% Creamos el tablero y lo mostramos por pantalla	
+	crear_tablero. %mostrar_tablero.											% Creamos el tablero y lo mostramos por pantalla	
 
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
@@ -274,9 +277,9 @@ otro_jugador(_, _):- throw('El jugador no es válido').
 % llamada finaliza en error.
 
 formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada').
-formar_palabra(J,_,_,_,_):- siguiente_ronda(P), P=\=J, throw('No es el turno del jugador J').
-formar_palabra(_,_,_,_,P):- 
-	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
+%formar_palabra(J,_,_,_,_):- siguiente_ronda(P), P=\=J, throw('No es el turno del jugador J').
+%formar_palabra(_,_,_,_,P):- 
+%	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
 formar_palabra(J,O,F,C,P):- 
 	empezado(1),
 	siguiente_ronda(J),
@@ -287,7 +290,7 @@ formar_palabra(J,O,F,C,P):-
 		O = h -> comprobar_limites(C,X), comprobar_limites(F,0);
 		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
 	),
-	comprobar_si_encaja(O,F,C,B,L),
+	comprobar_si_encaja(J,O,F,C,B,L,1,0),
 	usa_letra(O,F,C,B,L), 
 	actualizar_tablero(O,F,C,B,L),
 	mostrar_tablero.
@@ -315,12 +318,60 @@ usa_letra(v,F,C,B,[H|T]):-
 % comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
 comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
 
-% comprobar_si_encaja(+O,+F,+C,+B,+L) comprueba que la palabra L encaja en el tablero B en la posicion (F,C) en la orientacion O
-comprobar_si_encaja(_,_,_,_,[]).
-comprobar_si_encaja(h,F,C,B,[H|T]):- get_cell(F,C,B,H), X is C+1, comprobar_si_encaja(h,F,X,B,T).
-comprobar_si_encaja(h,F,C,B,[_|T]):- get_cell(F,C,B,Z), celdas_posibles(L), member(Z,L), X is C+1, comprobar_si_encaja(h,F,X,B,T).
-comprobar_si_encaja(v,F,C,B,[H|T]):- get_cell(F,C,B,H), X is F+1, comprobar_si_encaja(h,X,C,B,T).
-comprobar_si_encaja(v,F,C,B,[_|T]):- get_cell(F,C,B,Z), celdas_posibles(L), member(Z,L), X is F+1, comprobar_si_encaja(h,X,C,B,T).
+
+comprobar_si_encaja(J,_,_,_,_,[],M,P):- 
+	P_palabra is M*P, 
+	puntuacion(J, P_total), 
+	Puntuacion is P_palabra+P_total, 
+	retractall(puntuacion(J,_)),
+	asserta(puntuacion(J,Puntuacion)),
+	writeln(Puntuacion).
+comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):- 
+	get_cell(F,C,B,H), 
+	X is C+1, 
+	char_puntos_apariciones(H,Puntos,_),
+	P2 is P+Puntos,
+	comprobar_si_encaja(J,h,F,X,B,T,M,P2).
+comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):- 
+	get_cell(F,C,B,Z), 
+	celdas_posibles(L), 
+	member(Z,L),
+	char_puntos_apariciones(H,Puntos,_),
+	multiplicador_letra(Z,Mul_letra),
+	multiplicador_palabra(Z,Mul_palabra),
+	P2 is Puntos*Mul_letra,
+	P3 is P+P2,
+	write(Z ),writeln(Mul_letra),
+	X is C+1, 
+	M2 is max(M,Mul_palabra),
+	comprobar_si_encaja(J,h,F,X,B,T,M2,P3).
+comprobar_si_encaja(J,v,F,C,B,[H|T],M,P):- 
+	get_cell(F,C,B,H), 
+	X is F+1, 
+	char_puntos_apariciones(H,Puntos,_),
+	P2 is P+Puntos,
+	comprobar_si_encaja(J,h,X,C,B,T,M,P2).
+comprobar_si_encaja(v,F,C,B,[H|T],M,P):- 
+	get_cell(F,C,B,Z), 
+	celdas_posibles(L), 
+	member(Z,L), 
+	char_puntos_apariciones(H,Puntos,_),
+	multiplicador_letra(Z,Mul_letra),
+	multiplicador_palabra(Z,Mul_palabra),
+	P2 is Puntos*Mul_letra,
+	P3 is P+P2,
+	X is F+1, 
+	M2 is max(M,Mul_palabra),
+	comprobar_si_encaja(h,X,C,B,T,M2,P3).
+
+multiplicador_letra(_,1).
+multiplicador_letra(' DL  ',2).
+multiplicador_letra(' TL  ',3).
+
+multiplicador_palabra(_,1).
+multiplicador_palabra(' DP  ',2).
+multiplicador_palabra(' TP  ',3).
+
 
 celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
 
@@ -423,6 +474,5 @@ validar_palabraCompuesta(_, _):- throw('La palabra compuesta no existe en el dic
 
 % validar_fichas (tiene las fichas necesarias para formar la palabra)
 % validar_posicion (la palabra encaja en el tablero)
-
 
 
