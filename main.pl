@@ -120,6 +120,14 @@ reemplazar_celda(C, RowIn, NewValue, RowOut) :-
     append(Left, [_|Right], RowIn),
     length(Left, C),
     append(Left, [NewValue|Right], RowOut).
+
+%get_cell(+F,+C,+B,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
+get_cell(F,C,B,R):- 
+	append(R, [OldRow|BottomRows], B),
+    length(TopRows, F),
+	atom_string(TopRows,R).
+
+
 	
 % mostrar_tablero(+B) tiene éxito si B es una matriz (lista de listas) de tamaño 15, y escribe su contenido en pantalla
 mostrar_tablero(B):-
@@ -140,7 +148,9 @@ mostrar_tablero(_):- throw('El tablero no es de tamaño 15x15').
 mostrar_fila(S,R):- write(S), nl, write('|'), maplist(mostrar_item, R), nl .
 
 % mostrar_item(+C) tiene éxito siempre y escribe su valor en pantalla
-mostrar_item(C):- write(C), write('|').
+mostrar_item(C):- atom_chars(C,L), length(L,X), X is 8, write(C), write('|').
+mostrar_item(C):- atom_chars(C,L), length(L,X), X is 1, write('   '), write(C), write('    '), write('|').
+
 
 % actualizar_tablero
 
@@ -206,10 +216,18 @@ otro_jugador(player_2, player_1).
 otro_jugador(player, maquina).
 otro_jugador(maquina, player).
 
+
+%FORMAR_PALABRA(+J,+O,+F,+C,+P)
 %  Si hay una partida iniciada y es el turno del jugador J, formar_palabra(+J,+O,+F,+C,+P) introduce la palabra P en orientación O (horizontal o vertical) 
 % desde la fila F y la columna C y suma los puntos correspondientes al jugador J. Si no hay una partida iniciada, no es el turno del jugador J, la palabra 
 % P no encaja en orientación O desde la fila F y la columna C o bien el jugador J no dispone de las fichas necesarias para formar la palabra P, entonces la 
 % llamada finaliza en error.
+
+formar_palabra(J,O,F,C,P):- O=h, atom_chars(P,L), length(L,X), comprobar_limites(C,X), comprobar_limites(F,0), .
+
+
+comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
+
 
 
 % Si hay una partida iniciada y el jugador J acaba de formar una palabra o bien la partida acaba de iniciarse, asignar_fichas(+J,+F) entrega al jugador J las 
