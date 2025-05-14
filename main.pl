@@ -20,8 +20,6 @@
 :- assertz(ronda_inicial(player)).		% Jugador que empieza la partida: player
 :- assertz(siguiente_ronda(end)).			% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
 
-:- assertz(puntuacion(player, 0)).  	% Indica con que puntuación empezara el jugador 1: 0
-:- assertz(puntuacion(maquina, 0)).  	% Indica con que puntuación empezara el jugador 2 (la máquina): 0
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
 
@@ -159,13 +157,14 @@ set_cell(F, C, V, BoardIn, BoardOut) :-
 	retractall(tablero(_)), asserta(tablero(BoardOut)).
 
 
+% reemplazar_celda(+C,+RowIn,+NewValue,-RowOut) tiene éxito si RowOut es la fila RowIn con la celda C reemplazada por NewValue.
 reemplazar_celda(C, RowIn, NewValue, RowOut) :-
     append(Left, [_|Right], RowIn),
     length(Left, C),
     append(Left, [NewValue|Right], RowOut).
 
 
-%get_cell(+F,+C,+B,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
+% get_cell(+F,+C,+B,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
 get_cell(F,C,B,R):- 
 	X is F+1,
 	nth1(X,B,Fila),
@@ -173,7 +172,7 @@ get_cell(F,C,B,R):-
 	nth1(Y,Fila,R).
 
 	
-% mostrar_tablero(+B) tiene éxito si B es una matriz (lista de listas) de tamaño 15, y escribe su contenido en pantalla
+% mostrar_tablero tiene éxito siempre y escribe el contenido de una matriz (lista de listas) de tamaño 15 en pantalla
 mostrar_tablero:-
 	tablero(B),
 	length(B,15),
@@ -238,15 +237,21 @@ abandonar_partida(_):- empezado(0), throw('No hay ninguna partida iniciada').
 abandonar_partida(J):- \+member(J, [player, player_1, player_2, maquina]), throw('El jugador no está jugando').
 abandonar_partida(J):- 
 	empezado(1), retractall(empezado(_)), asserta(empezado(0)),						% Comprobamos que hay una partida iniciada y la terminamos
-	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 							% Indicamos que la siguiente ronda es el final de la partida
+	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 					% Indicamos que la siguiente ronda es el final de la partida
 	puntuacion(I,P), assertz(historial_puntuaciones(I,P)), 							% Añadimos el historial de puntuaciones del jugador
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores						 
 	(
 		modo(pvp) ->
 			otro_jugador(J, Ganador),
-			format('El jugador ~w ha ganado la partida.~n', [Ganador])				% Mostramos quién gana
+			format('El jugador ~w ha ganado la partida.~n', [Ganador]),				% Mostramos quién gana
+			puntuacion(Ganador, P1), puntuacion(J, P2),								% Obtenemos la puntuación de ambos jugadores
+			assertz(historial_puntuaciones(Ganador, P1, w)),						% Añadimos el historial de puntuaciones del jugador ganador
+			assertz(historial_puntuaciones(J, P2, l))								% Añadimos el historial de puntuaciones del jugador perdedor
 		;
-			writeln('La máquina ha ganado la partida.')
+			writeln('La máquina ha ganado la partida.'),
+			puntuacion(maquina, P1), puntuacion(player, P2),						% Obtenemos la puntuación de ambos jugadores
+			assertz(historial_puntuaciones(maquina, P1, w)),						% Añadimos el historial de puntuaciones del jugador ganador
+			assertz(historial_puntuaciones(player, P2, l))							% Añadimos el historial de puntuaciones del jugador perdedor
 	),
 	(
 		empieza(0) -> retractall(ronda_inicial(_)), asserta(ronda_inicial(player_1));							% Comprobamos que el modo de juego es normal y asignamos el inicio de la partida al jugador 1
@@ -254,10 +259,12 @@ abandonar_partida(J):-
 		retractall(ronda_inicial(_)), asserta(ronda_inicial(player_1))											% Comprobamos que el modo de juego es alterno y asignamos el inicio de la partida al jugador 1
 	).
 
-otro_jugador(player_1, player_2).
-otro_jugador(player_2, player_1).
-otro_jugador(player, maquina).
-otro_jugador(maquina, player).
+% otro_jugador(+J,+O) tiene éxito si O es el jugador que le toca jugar contra J. Si J no es un jugador válido, entonces la llamada termina en error.
+otro_jugador(player_1, player_2):- !.
+otro_jugador(player_2, player_1):- !.
+otro_jugador(player, maquina):- !.
+otro_jugador(maquina, player):- !.
+otro_jugador(_, _):- throw('El jugador no es válido').
 
 
 %FORMAR_PALABRA(+J,+O,+F,+C,+P)
@@ -285,14 +292,13 @@ formar_palabra(J,O,F,C,P):-
 	actualizar_tablero(O,F,C,B,L),
 	mostrar_tablero.
 
-
-%actualizar_tablero(+O,+F,+C,+B,+L) dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
+% ctualizar_tablero(+O,+F,+C,+B,+L) dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
 actualizar_tablero(_,_,_,_,[]).
 actualizar_tablero(h,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is C+1, actualizar_tablero(h,F,X,B2,T).
 actualizar_tablero(v,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is F+1, actualizar_tablero(v,X,C,B2,T).
 
-%usa_letra(O,F,C,B,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
-%en la posicion correspondiente
+% usa_letra(O,F,C,B,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
+% en la posicion correspondiente
 usa_letra(h,F,C,B,[H|T]):-
 	(
 		get_cell(F,C,B,H)->true;
@@ -306,10 +312,10 @@ usa_letra(v,F,C,B,[H|T]):-
 		X is F+1, usa_letra(v,X,C,B,T)
 	).
 
-%comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
+% comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
 comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
 
-
+% comprobar_si_encaja(+O,+F,+C,+B,+L) comprueba que la palabra L encaja en el tablero B en la posicion (F,C) en la orientacion O
 comprobar_si_encaja(_,_,_,_,[]).
 comprobar_si_encaja(h,F,C,B,[H|T]):- get_cell(F,C,B,H), X is C+1, comprobar_si_encaja(h,F,X,B,T).
 comprobar_si_encaja(h,F,C,B,[_|T]):- get_cell(F,C,B,Z), celdas_posibles(L), member(Z,L), X is C+1, comprobar_si_encaja(h,F,X,B,T).
@@ -325,9 +331,11 @@ celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
 % número de fichas que le faltan al jugador J (a excepción de que las fichas que falten por repartir sean menos de las que necesita el jugador J), entonces la 
 % llamada finaliza en error.
 
+
 % Si hay una partida iniciada y el jugador J participa en ella, mostrar_fichas(+J) muestra por pantalla las fichas de las que dispone el jugador J. En el caso
 % del modo de juego persona vs máquina, el jugador máquina será identificado mediante ‘ordenador’. Si no hay una partida iniciada o bien el jugador J no 
 % participa en ella, entonces la llamada finaliza en error.
+
 
 %  Si hay una partida iniciada, mostrar_puntuación muestra la puntuación de ambos jugadores. Si no hay una partida iniciada, entonces la llamada termina en error.
 
@@ -350,12 +358,31 @@ ver_resumen:- empezado(0), throw('No hay ninguna partida iniciada').
 ver_resumen:- 
 	empezado(1),																													% Comprobamos que hay una partida iniciada
 	opcionesEmpieza(E), opcionesModo(M), opcionesReparto(R), opcionesIdioma(I),														% Obtenemos las opciones de configuración
-	format('Modo de juego: ~w~n', [M]), format('Idioma: ~w~n', [I]), format('Reparto: ~w~n', [R]), format('Empieza: ~w~n', [E]). 	% Mostramos las opciones de configuración
-
+	format('Modo de juego: ~w~n', [M]), format('Idioma: ~w~n', [I]), format('Reparto: ~w~n', [R]), format('Empieza: ~w~n', [E]) 	% Mostramos las opciones de configuración
+	.
 
 % ver_historial(+J) muestra el historial del jugador J: número de victorias y derrotas, puntuación máxima y puntuación media.
+ver_historial(J):- var(J), !, throw('Debe especificar un jugador').
+ver_historial(J):- \+member(J, [player, player_1, player_2, maquina]), !, throw('El jugador no es válido').
+ver_historial(J):- findall(P,
+	(historial_puntuaciones(J,P,l)),	
+	L), length(L, NL), 						% Obtiene el número de partidas perdidas
+	findall(P,
+	(historial_puntuaciones(J,P,w)), 
+	W), length(W, NW),						% Obtiene el número de partidas ganadas
+	append(L,W,R),							% Une las listas de partidas ganadas y perdidas
+	max_list(R, Max),						% Obtiene la puntuación máxima
+	mean_list(R, Mean),						% Obtiene la puntuación media
+	format('El jugador ~w ha ganado ~w partidas y ha perdido ~w partidas.~n Su puntuación máxima es ~w y la puntuación media es ~w~n', [J, NW, NL, Max, Mean]).
 
-
+% mean_list(+L,-M) tiene éxito si M es la media de los elementos de la lista L.
+mean_list(L, M) :- 
+	sum_list(L, Sum), 
+	length(L, N), 
+	N > 0, 
+	M is Sum / N.
+	
+	
 % ver_ranking muestra dos listas de jugadores: en la primera, junto a cada nombre de jugador aparece su número y porcentaje de partidas ganadas, y los jugadores 
 % aparecen ordenados de manera descendente según el porcentaje de victorias; en la segunda, junto a cada nombre de jugador aparece su puntuación máxima y media, 
 % y los jugadores aparecen ordenados de manera descendente según su puntuación media
@@ -368,25 +395,22 @@ ver_resumen:-
 % jugar_B
 % jugar_maquina tiene éxito si el jugador es la máquina y se le asigna el turno. Si el jugador no es la máquina, entonces la llamada termina en error.
 jugar_maquina:- 
-	
-	siguiente_ronda(maquina), 						% Si el jugador es la máquina, se le asigna el turno
-	tablero(B), 									% Se obtiene el tablero actual
-	fichas_jugador(maquina, Fichas), 				% Se obtiene la lista de letras disponibles para la máquina
-	generar_palabra_aleatoria(Fichas, Palabra), 	% Se genera una palabra aleatoria
-	% Se obtiene una posición aleatoria en el tablero
-	obtener_posicion_aleatoria(Palabra, B, Posicion), 
-	% Se forma la palabra en el tablero
-	formar_palabra(maquina, h, Posicion, Palabra),
-	siguiente_ronda(jugador).					% Se asigna el turno al jugador
+	siguiente_ronda(maquina), 							% Si el jugador es la máquina, se le asigna el turno
+	tablero(B), 										% Se obtiene el tablero actual
+	fichas_jugador(maquina, Fichas), 					% Se obtiene la lista de letras disponibles para la máquina
+	generar_palabra_aleatoria(Fichas, Palabra), 		% Se genera una palabra aleatoria
+	obtener_posicion_aleatoria(Palabra, B, Posicion), 	% Se obtiene una posición aleatoria en el tablero
+	formar_palabra(maquina, h, Posicion, Palabra),		% Se forma la palabra en el tablero
+	siguiente_ronda(jugador).							% Se asigna el turno al jugador
 
 jugar_maquina:- throw('El jugador no es la máquina').
 
 % calcular_puntos
 
-% validar_palabra(+Palabra) tiene éxito si Palabra es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
-validar_palabra(Palabra):- 
-	diccionario(Diccionario), 
-	member(Palabra, Diccionario), !.
+% validar_palabra(+P) tiene éxito si Palabra es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
+validar_palabra(P):- 
+	diccionario(D), 
+	member(P, D), !.
 validar_palabra(_):- throw('La palabra no existe en el diccionario').
 
 % validar_palabraCompuesta(+PalabraTablero,+PalabraJugada) tiene éxito si la composicion de PalabraTablero y PalabraJugada es una palabra válida en el idioma actual.
@@ -396,9 +420,6 @@ validar_palabraCompuesta(PalabraTablero, PalabraJugada):-
 	atom_concat(PalabraTablero, PalabraJugada, PalabraFinal),
 	member(PalabraFinal, Diccionario), !.
 validar_palabraCompuesta(_, _):- throw('La palabra compuesta no existe en el diccionario').
-
-% validar_palabra (existe la palabra en el diccionario)
-% validar_palabraCompuesta (se añade "palabra" nueva a una palabra existente y se comprueba si existe)
 
 % validar_fichas (tiene las fichas necesarias para formar la palabra)
 % validar_posicion (la palabra encaja en el tablero)
