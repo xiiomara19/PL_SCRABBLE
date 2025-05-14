@@ -362,13 +362,15 @@ comprobar_si_encaja(v,F,C,B,[H|T],M,P):-
 	M2 is max(M,Mul_palabra),
 	comprobar_si_encaja(h,X,C,B,T,M2,P3).
 
-multiplicador_letra(_,1).
+
 multiplicador_letra(' DL  ',2).
 multiplicador_letra(' TL  ',3).
+multiplicador_letra(_,1).
 
-multiplicador_palabra(_,1).
+
 multiplicador_palabra(' DP  ',2).
 multiplicador_palabra(' TP  ',3).
+multiplicador_palabra(_,1).
 
 
 celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
