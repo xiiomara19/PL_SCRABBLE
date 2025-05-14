@@ -9,7 +9,8 @@
 			siguiente_ronda/1,			% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
 			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores y si ha ganado o perdido
 			diccionario/1,				% Guarda el diccionario de palabras segun el idioma de la partida
-			tablero/1.					% Guarda el tablero de juego
+			tablero/1,					% Guarda el tablero de juego
+			fichas_jugador/2,			% Guarda las fichas de cada jugador
 
 % Opciones de configuración
 :- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
@@ -86,9 +87,9 @@ establecer_opcion(_,_):- throw('No existe el apartado de configuracion especific
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TABLERO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% crear_tablero(-TableroFinal) tiene éxito si TableroFinal es una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
+% crear_tablero tiene éxito si TableroFinal es una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
 % especial o estar vacía.
-crear_tablero(TableroFinal) :-
+crear_tablero :-
     crear_tablero_base(TableroVacio),								% Crear el tablero vacío
     celdas_especiales(PosEspeciales),								% Obtener las posiciones de las celdas especiales
     insertar_celdas_especiales(PosEspeciales, TableroVacio, TableroFinal),
@@ -168,19 +169,20 @@ get_cell(F,C,B,R):-
 
 	
 % mostrar_tablero(+B) tiene éxito si B es una matriz (lista de listas) de tamaño 15, y escribe su contenido en pantalla
-mostrar_tablero(B):-
-		length(B,15),
-		maplist(same_length(B),B),
-		!,
-		W is 6*15+1,
-		length(L,W),
-		maplist(=('-'),L),
-		atom_chars(S,L),
-		maplist(mostrar_fila(S),B),
-		write(S),
-		nl.
+mostrar_tablero:-
+	tablero(B),
+	length(B,15),
+	maplist(same_length(B),B),
+	!,
+	W is 6*15+1,
+	length(L,W),
+	maplist(=('-'),L),
+	atom_chars(S,L),
+	maplist(mostrar_fila(S),B),
+	write(S),
+	nl.
 	
-mostrar_tablero(_):- throw('El tablero no es de tamaño 15x15').
+mostrar_tablero:- throw('El tablero no es de tamaño 15x15').
 
 % mostrar_fila (+S,+R) tiene éxito siempre, y escribe en pantalla el contenido de la lista R tras escribir S
 mostrar_fila(S,R):- write(S), nl, write('|'), maplist(mostrar_item, R), nl .
@@ -206,7 +208,7 @@ iniciar_partida(player):-
 		ronda_inicial(player) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(maquina))									% Comprobamos que la máquina empieza la partida y lo asignamos
 	),
-	crear_tablero(B), mostrar_tablero(B).											% Creamos el tablero y lo mostramos por pantalla	
+	crear_tablero, mostrar_tablero.											% Creamos el tablero y lo mostramos por pantalla	
 
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
@@ -222,7 +224,7 @@ iniciar_partida(player_1, player_2):-
 		ronda_inicial(player_1) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_1));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_2))										% Comprobamos que el jugador 2 empieza la partida y lo asignamos
 	),
-	crear_tablero(B), mostrar_tablero(B).											% Creamos el tablero y lo mostramos por pantalla	
+	crear_tablero, mostrar_tablero.											% Creamos el tablero y lo mostramos por pantalla	
 
 % Si hay una partida iniciada, abandonar_partida(+J) da la partida por perdida para el jugador J. Si no hay ninguna partida iniciada o bien el jugador J 
 % no está jugando, entonces la llamada termina en error.
@@ -259,29 +261,24 @@ otro_jugador(maquina, player).
 % P no encaja en orientación O desde la fila F y la columna C o bien el jugador J no dispone de las fichas necesarias para formar la palabra P, entonces la 
 % llamada finaliza en error.
 
-formar_palabra(_,h,F,C,P):- 
+formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada').
+formar_palabra(J,_,_,_,_):- siguiente_ronda(P), P=\=J, throw('No es el turno del jugador J').
+formar_palabra(J,_,_,_,P):- 
+	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
+formar_palabra(J,O,F,C,P):- 
+	empezado(1),
+	siguiente_ronda(J),
 	tablero(B), 
 	atom_chars(P,L), 
 	length(L,X), 
-	comprobar_limites(C,X), 
-	comprobar_limites(F,0), 
-	comprobar_si_encaja(h,F,C,B,L),
-	usa_letra(h,F,C,B,L), 
-	actualizar_tablero(h,F,C,B,L),
-	tablero(B2),
-	mostrar_tablero(B2).
-
-formar_palabra(_,v,F,C,P):- 
-	tablero(B), 
-	atom_chars(P,L), 
-	length(L,X), 
-	comprobar_limites(C,0), 
-	comprobar_limites(F,X), 
-	comprobar_si_encaja(v,F,C,B,L),
-	usa_letra(v,F,C,B,L), 
-	actualizar_tablero(v,F,C,B,L),
-	tablero(B2),
-	mostrar_tablero(B2).
+	(
+		O = h -> comprobar_limites(C,X), comprobar_limites(F,0);
+		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
+	),
+	comprobar_si_encaja(O,F,C,B,L),
+	usa_letra(O,F,C,B,L), 
+	actualizar_tablero(O,F,C,B,L),
+	mostrar_tablero.
 
 
 %actualizar_tablero(+O,+F,+C,+B,+L) dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
@@ -362,8 +359,22 @@ ver_resumen:-
 
 
 % jugar_A
+
 % jugar_B
-% jugar_maquina (MAS ADELANTE)
+% jugar_maquina tiene éxito si el jugador es la máquina y se le asigna el turno. Si el jugador no es la máquina, entonces la llamada termina en error.
+jugar_maquina:- 
+	
+	siguiente_ronda(maquina), 						% Si el jugador es la máquina, se le asigna el turno
+	tablero(B), 									% Se obtiene el tablero actual
+	fichas_jugador(maquina, Fichas), 				% Se obtiene la lista de letras disponibles para la máquina
+	generar_palabra_aleatoria(Fichas, Palabra), 	% Se genera una palabra aleatoria
+	% Se obtiene una posición aleatoria en el tablero
+	obtener_posicion_aleatoria(Palabra, B, Posicion), 
+	% Se forma la palabra en el tablero
+	formar_palabra(maquina, h, Posicion, Palabra),
+	siguiente_ronda(jugador).					% Se asigna el turno al jugador
+
+jugar_maquina:- throw('El jugador no es la máquina').
 
 % calcular_puntos
 
