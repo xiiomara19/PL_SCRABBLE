@@ -23,12 +23,13 @@
 :- assertz(puntuacion(maquina, 0)).  	% Indica con que puntuación empezara el jugador 2 (la máquina): 0
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % cargar_diccionario(+L) tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
 % con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
 cargar_diccionario(L):- 
 	atomic_list_concat(['words.', L, '.txt'], Fichero),  	% Crear el nombre del archivo
-	open(Fichero, read, Stream, [encoding(utf8)]),			% Abrir el archivo en modo lectura con codificación UTF-8
+	open(Fichero, read, Stream),		
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
 	retractall(diccionario(_)),									% Limpiar el diccionario actual	
@@ -95,7 +96,7 @@ crear_tablero(TableroFinal) :-
 
 % crear_tablero_base(-B) tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador 'SC').
 crear_tablero_base(B):-
-	length(Row, 15), maplist(=('(''SC'', )'), Row), 	% Crea una fila con N elementos vacíos
+	length(Row, 15), maplist(=(' --- '), Row), 	% Crea una fila con N elementos vacíos
     length(B, 15), maplist(=(Row), B).    				% Repite esa fila N veces para crear la matriz
 
 % celdas_especiales(+C) tiene éxito si C es una lista de celdas especiales, donde cada celda especial es una tupla (F,C,T) que indica la fila F, la columna C y 
@@ -105,17 +106,31 @@ crear_tablero_base(B):-
 % 	3. TL (Triple Letra): multiplica por 3 la puntuación de la letra colocada en esa celda.
 % 	4. DL (Doble Letra): multiplica por 2 la puntuación de la letra colocada en esa celda.
 celdas_especiales([
-    (0, 0, '(''TP'', )'), (0, 7, '(''TP'', )'), (0,14, '(''TP'', )'),
-    (7, 0, '(''TP'', )'), (7,14, '(''TP'', )'),
-    (14, 0,'(''TP'', )'), (14,7,'(''TP'', )'), (14,14,'(''TP'', )'),
+    (0, 0, ' TP  '), (0, 7, ' TP  '), (0,14, ' TP  '),
+    (7, 0, ' TP  '), (7,14, ' TP  '),
+    (14, 0,' TP  '), (14,7,' TP  '), (14,14,' TP  '),
 
-    (1, 1, '(''DP'', )'), (2, 2, '(''DP'', )'), (3, 3, '(''DP'', )'),
-    (4, 4, '(''DP'', )'), (10,10,'(''DP'', )'), (11,11,'(''DP'', )'),
-    (12,12,'(''DP'', )'), (13,13,'(''DP'', )'),
+    (1, 1, ' DP  '), (2, 2, ' DP  '), (3, 3, ' DP  '), (4, 4, ' DP  '), 
+	(1, 13,' DP  '), (2, 12,' DP  '), (3, 11,' DP  '), (4, 10,' DP  '),
+	(10,10,' DP  '), (11,11,' DP  '), (12,12,' DP  '), (13,13,' DP  '),
+	(10,4, ' DP  '), (11,3, ' DP  '), (12,2, ' DP  '), (13,1, ' DP  '),
 
-    (1, 5, '(''TL'', )'), (5, 1, '(''TL'', )'), (5, 5, '(''TL'', )'), (5, 9, '(''TL'', )'), (9, 5, '(''TL'', )'),
+    (1, 5, ' TL  '), (1, 9, ' TL  '), 
+	(5, 1, ' TL  '), (5, 5, ' TL  '), (5, 9, ' TL  '), (5, 13, ' TL  '), 
+	(9, 1, ' TL  '), (9, 5, ' TL  '), (9, 9, ' TL  '), (9, 13, ' TL  '), 
+	(9, 5, ' TL  '), (9, 9, ' TL  '),
 
-    (0, 3, '(''DL'', )'), (2, 6, '(''DL'', )'), (3, 0, '(''DL'', )'), (3, 7, '(''DL'', )'), (3,14, '(''DL'', )')
+    (0, 3, ' DL  '), (0, 11, ' DL  '), 
+	(2, 6, ' DL  '), (2, 8, ' DL  '), 
+	(3, 0, ' DL  '), (3, 7, ' DL  '), (3,14, ' DL  '),
+	(6, 2, ' DL  '), (6, 6, ' DL  '), (6,8, ' DL  '), (6,12, ' DL  '),
+	(7, 3, ' DL  '), (7, 11, ' DL  '), 
+	(8, 2, ' DL  '), (8, 6, ' DL  '), (8,8, ' DL  '), (8,12, ' DL  '),
+	(11, 0, ' DL  '), (11, 7, ' DL  '), (11,14, ' DL  '),
+	(12, 6, ' DL  '), (12, 8, ' DL  '), 
+	(14, 3, ' DL  '), (14, 11, ' DL  '),
+
+	(7, 7, '  *  ')
 ]).
 
 % insertar_celdas_especiales(+C,+BoardIn,-BoardOut) tiene éxito si BoardOut es el tablero BoardIn con las celdas especiales de C insertadas.
@@ -134,7 +149,8 @@ set_cell(F, C, V, BoardIn, BoardOut) :-
     reemplazar_celda(C, OldRow, V, NewRow),
 
     % Reinsertar la nueva fila en la matriz
-    append(TopRows, [NewRow|BottomRows], BoardOut).
+    append(TopRows, [NewRow|BottomRows], BoardOut),
+	retractall(tablero(_)), asserta(tablero(BoardOut)).
 
 
 reemplazar_celda(C, RowIn, NewValue, RowOut) :-
@@ -142,12 +158,13 @@ reemplazar_celda(C, RowIn, NewValue, RowOut) :-
     length(Left, C),
     append(Left, [NewValue|Right], RowOut).
 
+
 %get_cell(+F,+C,+B,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
 get_cell(F,C,B,R):- 
-	append(R, [OldRow|BottomRows], B),
-    length(TopRows, F),
-	atom_string(TopRows,R).
-
+	X is F+1,
+	nth1(X,B,Fila),
+	Y is C+1,
+	nth1(Y,Fila,R).
 
 	
 % mostrar_tablero(+B) tiene éxito si B es una matriz (lista de listas) de tamaño 15, y escribe su contenido en pantalla
@@ -155,7 +172,7 @@ mostrar_tablero(B):-
 		length(B,15),
 		maplist(same_length(B),B),
 		!,
-		W is 9*15+1,
+		W is 6*15+1,
 		length(L,W),
 		maplist(=('-'),L),
 		atom_chars(S,L),
@@ -169,11 +186,9 @@ mostrar_tablero(_):- throw('El tablero no es de tamaño 15x15').
 mostrar_fila(S,R):- write(S), nl, write('|'), maplist(mostrar_item, R), nl .
 
 % mostrar_item(+C) tiene éxito siempre y escribe su valor en pantalla
-mostrar_item(C):- atom_chars(C,L), length(L,X), X is 8, write(C), write('|').
-mostrar_item(C):- atom_chars(C,L), length(L,X), X is 1, write('   '), write(C), write('    '), write('|').
+mostrar_item(C):- atom_chars(C,L), length(L,X), X is 5, write(C), write('|').
+mostrar_item(C):- atom_chars(C,L), length(L,X), X is 1, write('  '), write(C), write('  '), write('|').
 
-
-% actualizar_tablero
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% JUGABILIDAD %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -244,11 +259,62 @@ otro_jugador(maquina, player).
 % P no encaja en orientación O desde la fila F y la columna C o bien el jugador J no dispone de las fichas necesarias para formar la palabra P, entonces la 
 % llamada finaliza en error.
 
-formar_palabra(J,O,F,C,P):- O=h, atom_chars(P,L), length(L,X), comprobar_limites(C,X), comprobar_limites(F,0), .
+formar_palabra(_,h,F,C,P):- 
+	tablero(B), 
+	atom_chars(P,L), 
+	length(L,X), 
+	comprobar_limites(C,X), 
+	comprobar_limites(F,0), 
+	comprobar_si_encaja(h,F,C,B,L),
+	usa_letra(h,F,C,B,L), 
+	actualizar_tablero(h,F,C,B,L),
+	tablero(B2),
+	mostrar_tablero(B2).
+
+formar_palabra(_,v,F,C,P):- 
+	tablero(B), 
+	atom_chars(P,L), 
+	length(L,X), 
+	comprobar_limites(C,0), 
+	comprobar_limites(F,X), 
+	comprobar_si_encaja(v,F,C,B,L),
+	usa_letra(v,F,C,B,L), 
+	actualizar_tablero(v,F,C,B,L),
+	tablero(B2),
+	mostrar_tablero(B2).
 
 
+%actualizar_tablero(+O,+F,+C,+B,+L) dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
+actualizar_tablero(_,_,_,_,[]).
+actualizar_tablero(h,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is C+1, actualizar_tablero(h,F,X,B2,T).
+actualizar_tablero(v,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is F+1, actualizar_tablero(v,X,C,B2,T).
+
+%usa_letra(O,F,C,B,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
+%en la posicion correspondiente
+usa_letra(h,F,C,B,[H|T]):-
+	(
+		get_cell(F,C,B,H)->true;
+		get_cell(F,C,B,'  *  ') -> true;
+		X is C+1, usa_letra(h,F,X,B,T)
+	).
+usa_letra(v,F,C,B,[H|T]):-
+	(
+		get_cell(F,C,B,H)->true;
+		get_cell(F,C,B,'  *  ') -> true;
+		X is F+1, usa_letra(v,X,C,B,T)
+	).
+
+%comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
 comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
 
+
+comprobar_si_encaja(_,_,_,_,[]).
+comprobar_si_encaja(h,F,C,B,[H|T]):- get_cell(F,C,B,H), X is C+1, comprobar_si_encaja(h,F,X,B,T).
+comprobar_si_encaja(h,F,C,B,[_|T]):- get_cell(F,C,B,Z), celdas_posibles(L), member(Z,L), X is C+1, comprobar_si_encaja(h,F,X,B,T).
+comprobar_si_encaja(v,F,C,B,[H|T]):- get_cell(F,C,B,H), X is F+1, comprobar_si_encaja(h,X,C,B,T).
+comprobar_si_encaja(v,F,C,B,[_|T]):- get_cell(F,C,B,Z), celdas_posibles(L), member(Z,L), X is F+1, comprobar_si_encaja(h,X,C,B,T).
+
+celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
 
 
 % Si hay una partida iniciada y el jugador J acaba de formar una palabra o bien la partida acaba de iniciarse, asignar_fichas(+J,+F) entrega al jugador J las 
@@ -314,6 +380,9 @@ validar_palabraCompuesta(PalabraTablero, PalabraJugada):-
 	atom_concat(PalabraTablero, PalabraJugada, PalabraFinal),
 	member(PalabraFinal, Diccionario), !.
 validar_palabraCompuesta(_, _):- throw('La palabra compuesta no existe en el diccionario').
+
+% validar_palabra (existe la palabra en el diccionario)
+% validar_palabraCompuesta (se añade "palabra" nueva a una palabra existente y se comprueba si existe)
 
 % validar_fichas (tiene las fichas necesarias para formar la palabra)
 % validar_posicion (la palabra encaja en el tablero)
