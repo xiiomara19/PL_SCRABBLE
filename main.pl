@@ -163,11 +163,9 @@ reemplazar_celda(C, RowIn, NewValue, RowOut) :-
     length(Left, C),
     append(Left, [NewValue|Right], RowOut).
 
-%QUITAR B DE AQUI Y USAR EL DINAMICO
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%get_cell(+F,+C,+B,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
-get_cell(F,C,B,R):- 
+%get_cell(+F,+C,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
+get_cell(F,C,R):- 
+	board(B),
 	X is F+1,
 	nth1(X,B,Fila),
 	Y is C+1,
@@ -300,25 +298,25 @@ actualizar_tablero(_,_,_,_,[]).
 actualizar_tablero(h,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is C+1, actualizar_tablero(h,F,X,B2,T).
 actualizar_tablero(v,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is F+1, actualizar_tablero(v,X,C,B2,T).
 
-% usa_letra(O,F,C,B,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
+% usa_letra(O,F,C,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
 % en la posicion correspondiente
-usa_letra(h,F,C,B,[H|T]):-
+usa_letra(h,F,C,[H|T]):-
 	(
-		get_cell(F,C,B,H)->true;
-		get_cell(F,C,B,'  *  ') -> true;
-		X is C+1, usa_letra(h,F,X,B,T)
+		get_cell(F,C,H)->true;
+		get_cell(F,C,'  *  ') -> true;
+		X is C+1, usa_letra(h,F,X,T)
 	).
-usa_letra(v,F,C,B,[H|T]):-
+usa_letra(v,F,C,[H|T]):-
 	(
-		get_cell(F,C,B,H)->true;
-		get_cell(F,C,B,'  *  ') -> true;
-		X is F+1, usa_letra(v,X,C,B,T)
+		get_cell(F,C,H)->true;
+		get_cell(F,C,'  *  ') -> true;
+		X is F+1, usa_letra(v,X,C,T)
 	).
 
 % comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
 comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
 
-
+% comprobar_si_encaja(+J,+O,+F,+C,+B,+L,+M,+P) comprueba si la palabra L encaja en el tablero B en la posicion (F,C) y devuelve la puntuacion obtenida
 comprobar_si_encaja(J,_,_,_,_,[],M,P):- 
 	P_palabra is M*P, 
 	puntuacion(J, P_total), 
@@ -327,13 +325,13 @@ comprobar_si_encaja(J,_,_,_,_,[],M,P):-
 	asserta(puntuacion(J,Puntuacion)),
 	writeln(Puntuacion).
 comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):- 
-	get_cell(F,C,B,H), 
+	get_cell(F,C,H), 
 	X is C+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
 	comprobar_si_encaja(J,h,F,X,B,T,M,P2).
 comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):- 
-	get_cell(F,C,B,Z), 
+	get_cell(F,C,Z), 
 	celdas_posibles(L), 
 	member(Z,L),
 	char_puntos_apariciones(H,Puntos,_),
@@ -346,13 +344,13 @@ comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):-
 	M2 is max(M,Mul_palabra),
 	comprobar_si_encaja(J,h,F,X,B,T,M2,P3).
 comprobar_si_encaja(J,v,F,C,B,[H|T],M,P):- 
-	get_cell(F,C,B,H), 
+	get_cell(F,C,H), 
 	X is F+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
 	comprobar_si_encaja(J,h,X,C,B,T,M,P2).
 comprobar_si_encaja(v,F,C,B,[H|T],M,P):- 
-	get_cell(F,C,B,Z), 
+	get_cell(F,C,Z), 
 	celdas_posibles(L), 
 	member(Z,L), 
 	char_puntos_apariciones(H,Puntos,_),
@@ -473,6 +471,5 @@ validar_palabraCompuesta(PalabraTablero, PalabraJugada):-
 validar_palabraCompuesta(_, _):- throw('La palabra compuesta no existe en el diccionario').
 
 % validar_fichas (tiene las fichas necesarias para formar la palabra)
-% validar_posicion (la palabra encaja en el tablero)
 
 
