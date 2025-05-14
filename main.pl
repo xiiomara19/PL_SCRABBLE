@@ -5,27 +5,23 @@
 			empieza/1,              	% Indica que jugador empezará
 			puntuacion/2,           	% Guarda la puntuación asociada con cada jugador
 			empezado/1,             	% Indica si hay una partida en progreso (0: no, 1: si)
-			initial_round/1, 			% Jugador que empieza la partida: player_1 o player_2
-			next_round/1,				% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
-			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores
-			diccionario/1.				% Guarda el diccionario de palabras
+			ronda_inicial/1, 			% Jugador que empieza la partida: player_1 o player_2
+			siguiente_ronda/1,			% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
+			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores y si ha ganado o perdido
+			diccionario/1,				% Guarda el diccionario de palabras segun el idioma de la partida
+			tablero/1.					% Guarda el tablero de juego
 
 % Opciones de configuración
 :- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
 :- assertz(modo(pve)).	            	% Modo de juego por defecto: pve
 :- assertz(reparto(aleatorio)).	    	% Modo en el que se reparten las fichas por defecto: aleatorio
 :- assertz(empieza(0)).		    		% Modo de inicio de partida: normal
-:- assertz(initial_round(player)).		% Jugador que empieza la partida: player
-:- assertz(next_round(end)).			% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
+:- assertz(ronda_inicial(player)).		% Jugador que empieza la partida: player
+:- assertz(siguiente_ronda(end)).			% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
 
 :- assertz(puntuacion(player, 0)).  	% Indica con que puntuación empezara el jugador 1: 0
 :- assertz(puntuacion(maquina, 0)).  	% Indica con que puntuación empezara el jugador 2 (la máquina): 0
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
-
-:-assertz(historial_puntuaciones(player,0,w)).	% Historial de puntuaciones del jugador 1 y si ha ganado o perdido
-:-assertz(historial_puntuaciones(maquina,0,l)).	% Historial de puntuaciones del jugador 2 (la máquina) y si ha ganado o perdido
-
-:-assertz(diccionario([])).				% Diccionario vacío por defecto
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % cargar_diccionario(+L) tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
@@ -92,9 +88,10 @@ establecer_opcion(_,_):- throw('No existe el apartado de configuracion especific
 % crear_tablero(-TableroFinal) tiene éxito si TableroFinal es una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
 % especial o estar vacía.
 crear_tablero(TableroFinal) :-
-    crear_tablero_base(TableroVacio),				% Crear el tablero vacío
-    celdas_especiales(PosEspeciales),		% Obtener las posiciones de las celdas especiales
-    insertar_celdas_especiales(PosEspeciales, TableroVacio, TableroFinal).
+    crear_tablero_base(TableroVacio),								% Crear el tablero vacío
+    celdas_especiales(PosEspeciales),								% Obtener las posiciones de las celdas especiales
+    insertar_celdas_especiales(PosEspeciales, TableroVacio, TableroFinal),
+	retractall(tablero(_)), asserta(tablero(TableroFinal)). 		% Guardar el tablero creado
 
 % crear_tablero_base(-B) tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador 'SC').
 crear_tablero_base(B):-
@@ -191,8 +188,8 @@ iniciar_partida(player):-
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores	
 	asserta(puntuacion(player, 0)),	asserta(puntuacion(maquina, 0)),				% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
 	(
-		initial_round(player) -> retractall(next_round(_)), asserta(next_round(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
-		retractall(next_round(_)), asserta(next_round(maquina))									% Comprobamos que la máquina empieza la partida y lo asignamos
+		ronda_inicial(player) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
+		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(maquina))									% Comprobamos que la máquina empieza la partida y lo asignamos
 	),
 	crear_tablero(B), mostrar_tablero(B).											% Creamos el tablero y lo mostramos por pantalla	
 
@@ -207,8 +204,8 @@ iniciar_partida(player_1, player_2):-
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores
 	asserta(puntuacion(player_1 , 0)), asserta(puntuacion(player_2, 0)),			% Inicializamos la puntuación del jgador 1 y el jugador 2 a 0
 	(
-		initial_round(player_1) -> retractall(next_round(_)), asserta(next_round(player_1));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
-		retractall(next_round(_)), asserta(next_round(player_2))										% Comprobamos que el jugador 2 empieza la partida y lo asignamos
+		ronda_inicial(player_1) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_1));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
+		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_2))										% Comprobamos que el jugador 2 empieza la partida y lo asignamos
 	),
 	crear_tablero(B), mostrar_tablero(B).											% Creamos el tablero y lo mostramos por pantalla	
 
@@ -219,7 +216,7 @@ abandonar_partida(_):- empezado(0), throw('No hay ninguna partida iniciada').
 abandonar_partida(J):- \+member(J, [player, player_1, player_2, maquina]), throw('El jugador no está jugando').
 abandonar_partida(J):- 
 	empezado(1), retractall(empezado(_)), asserta(empezado(0)),						% Comprobamos que hay una partida iniciada y la terminamos
-	retractall(next_round(_)), asserta(next_round(end)), 							% Indicamos que la siguiente ronda es el final de la partida
+	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 							% Indicamos que la siguiente ronda es el final de la partida
 	puntuacion(I,P), assertz(historial_puntuaciones(I,P)), 							% Añadimos el historial de puntuaciones del jugador
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores						 
 	(
@@ -230,9 +227,9 @@ abandonar_partida(J):-
 			writeln('La máquina ha ganado la partida.')
 	),
 	(
-		empieza(0) -> retractall(initial_round(_)), asserta(initial_round(player_1));							% Comprobamos que el modo de juego es normal y asignamos el inicio de la partida al jugador 1
-		empieza(1), initial_round(player_1) -> retractall(initial_round(_)), asserta(initial_round(player_2));	% Comprobamos que el modo de juego es alterno y asignamos el inicio de la partida al jugador 2
-		retractall(initial_round(_)), asserta(initial_round(player_1))											% Comprobamos que el modo de juego es alterno y asignamos el inicio de la partida al jugador 1
+		empieza(0) -> retractall(ronda_inicial(_)), asserta(ronda_inicial(player_1));							% Comprobamos que el modo de juego es normal y asignamos el inicio de la partida al jugador 1
+		empieza(1), ronda_inicial(player_1) -> retractall(ronda_inicial(_)), asserta(ronda_inicial(player_2));	% Comprobamos que el modo de juego es alterno y asignamos el inicio de la partida al jugador 2
+		retractall(ronda_inicial(_)), asserta(ronda_inicial(player_1))											% Comprobamos que el modo de juego es alterno y asignamos el inicio de la partida al jugador 1
 	).
 
 otro_jugador(player_1, player_2).
