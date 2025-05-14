@@ -7,7 +7,8 @@
 			empezado/1,             	% Indica si hay una partida en progreso (0: no, 1: si)
 			initial_round/1, 			% Jugador que empieza la partida: player_1 o player_2
 			next_round/1,				% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
-			historial_puntuaciones/3.	% Guarda el historial de puntuaciones de los jugadores
+			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores
+			diccionario/1.				% Guarda el diccionario de palabras
 
 % Opciones de configuración
 :- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
@@ -24,26 +25,49 @@
 :-assertz(historial_puntuaciones(player,0,w)).	% Historial de puntuaciones del jugador 1 y si ha ganado o perdido
 :-assertz(historial_puntuaciones(maquina,0,l)).	% Historial de puntuaciones del jugador 2 (la máquina) y si ha ganado o perdido
 
+:-assertz(diccionario([])).				% Diccionario vacío por defecto
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% cargar_diccionario(+L) tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
+% con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
+cargar_diccionario(L):- 
+	atomic_list_concat(['words.', L, '.txt'], Fichero),  	% Crear el nombre del archivo
+	open(Fichero, read, Stream),		
+	obtener_lineas(Stream, Lineas),
+	close(Stream), !,
+	retractall(diccionario(_)),									% Limpiar el diccionario actual	
+	asserta(diccionario(Lineas)).								% Cargar el nuevo diccionario
+
+cargar_diccionario(_):- throw('No se ha podido cargar el diccionario').
+
+% obtener_lineas(+Stream,-Lineas) tiene éxito si Lineas es una lista de palabras leídas desde el flujo Stream. Cada palabra se considera una línea del archivo.
+obtener_lineas(Stream, []) :-
+    at_end_of_stream(Stream), !.
+
+obtener_lineas(Stream, [Palabra|Resto]) :-
+    read_line_to_codes(Stream, Codes),
+    atom_codes(Palabra, Codes),
+    obtener_lineas(Stream, Resto).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CONFIGURACION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %==========Predicados para comprobar que las nuevas opciones son correctas============
-opcionesIdioma(eu).
-opcionesIdioma(es).
-opcionesIdioma(en).
+opcionesIdioma(eus):-!.
+opcionesIdioma(es):- !.
+opcionesIdioma(en):- !.
 opcionesIdioma(_):- throw('No existe ese idioma').
 
 
-opcionesModo(pve).
-opcionesModo(pvp).
+opcionesModo(pve):- !.
+opcionesModo(pvp):- !.
 opcionesModo(_):- throw('No existe ese modo de juego').
 
-opcionesReparto(aleatorio).
-opcionesReparto(manual).
+opcionesReparto(aleatorio):- !.
+opcionesReparto(manual):- !.
 opcionesReparto(_):- throw('No existe ese modo de reparto').
 
-opcionesEmpieza(0).
-opcionesEmpieza(1).
+opcionesEmpieza(0):- !.
+opcionesEmpieza(1):- !.
 opcionesEmpieza(_):- throw('No existe ese modo de inicio').
 
 % ver_opcion(+O) muestra el valor establecido en el apartado de configuración O. Si el apartado de configuración O no existe, la llamada termina en error.
@@ -56,10 +80,10 @@ ver_opcion(_):- throw('Error esa opcion no existe').
 % Si no hay ninguna partida iniciada, establecer_opcion(+O,+V) establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
 % de configuración O no existe o bien si el valor V no se corresponde con el apartado de configuración O, entonces la llamada termina en error.
 establecer_opcion(_,_):- empezado(1), throw('No se pueden cambiar las opciones de configuracion mientras hay una partida en curso').
-establecer_opcion(idioma,A):- empezado(0), opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)), !.
-establecer_opcion(modo,A):- empezado(0), opcionesModo(A), retract(modo(_)), asserta(modo(A)), !.
-establecer_opcion(reparto,A):- empezado(0),  opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)), !.
-establecer_opcion(empieza,A):- empezado(0), opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)), !.
+establecer_opcion(idioma,A):- empezado(0), opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)), cargar_diccionario(A), !.
+establecer_opcion(modo,A):- empezado(0), opcionesModo(A), retract(modo(_)), asserta(modo(A)),  cargar_diccionario(A), !.
+establecer_opcion(reparto,A):- empezado(0),  opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)),  cargar_diccionario(A), !.
+establecer_opcion(empieza,A):- empezado(0), opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)),  cargar_diccionario(A), !.
 establecer_opcion(_,_):- throw('No existe el apartado de configuracion especificado').
 
 
@@ -247,7 +271,7 @@ mostrar_puntuacion:-
 	empezado(1),																% Comprobamos que hay una partida iniciada
 	(
 		modo(pvp) -> puntuacion(player, P1), puntuacion(maquina, P2);			% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2 (la máquina)
-		puntuacion(player_1, P1), puntuacion(player_2, P2),						% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2
+		puntuacion(player_1, P1), puntuacion(player_2, P2)						% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2
 	),
 	format('Puntuación del jugador 1: ~w~n', [P1]), format('Puntuación del jugador 2: ~w~n', [P2]). 	
 	
