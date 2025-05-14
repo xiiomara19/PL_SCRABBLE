@@ -28,7 +28,7 @@
 % con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
 cargar_diccionario(L):- 
 	atomic_list_concat(['words.', L, '.txt'], Fichero),  	% Crear el nombre del archivo
-	open(Fichero, read, Stream),		
+	open(Fichero, read, Stream, [encoding(utf8)]),			% Abrir el archivo en modo lectura con codificación UTF-8
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
 	retractall(diccionario(_)),									% Limpiar el diccionario actual	
@@ -301,8 +301,19 @@ ver_resumen:-
 
 % calcular_puntos
 
-% validar_palabra (existe la palabra en el diccionario)
-% validar_palabraCompuesta (se añade "palabra" nueva a una palabra existente y se comprueba si existe)
+% validar_palabra(+Palabra) tiene éxito si Palabra es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
+validar_palabra(Palabra):- 
+	diccionario(Diccionario), 
+	member(Palabra, Diccionario), !.
+validar_palabra(_):- throw('La palabra no existe en el diccionario').
+
+% validar_palabraCompuesta(+PalabraTablero,+PalabraJugada) tiene éxito si la composicion de PalabraTablero y PalabraJugada es una palabra válida en el idioma actual.
+% Si la palabra no es válida, la llamada termina en error.
+validar_palabraCompuesta(PalabraTablero, PalabraJugada):- 
+	diccionario(Diccionario), 
+	atom_concat(PalabraTablero, PalabraJugada, PalabraFinal),
+	member(PalabraFinal, Diccionario), !.
+validar_palabraCompuesta(_, _):- throw('La palabra compuesta no existe en el diccionario').
 
 % validar_fichas (tiene las fichas necesarias para formar la palabra)
 % validar_posicion (la palabra encaja en el tablero)
