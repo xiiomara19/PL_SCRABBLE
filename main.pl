@@ -8,7 +8,8 @@
 			ronda_inicial/1, 			% Jugador que empieza la partida: player_1 o player_2
 			siguiente_ronda/1,			% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
 			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores y si ha ganado o perdido
-			diccionario/1,				% Guarda el diccionario de palabras segun el idioma de la partida
+			diccionario/1,
+			coso/2,				% Guarda el diccionario de palabras segun el idioma de la partida
 			tablero/1.					% Guarda el tablero de juego
 
 % Opciones de configuración
@@ -24,16 +25,21 @@
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % cargar_diccionario(+L) tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
 % con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
 cargar_diccionario(L):- 
+	atomic_list_concat(['palabras_', L, '.pl'], Caracteres),
 	atomic_list_concat(['words.', L, '.txt'], Fichero),  	% Crear el nombre del archivo
 	open(Fichero, read, Stream),		
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
-	retractall(diccionario(_)),									% Limpiar el diccionario actual	
-	asserta(diccionario(Lineas)).								% Cargar el nuevo diccionario
+	retractall(diccionario(_)),							% Limpiar el diccionario actual	
+	retractall(char_puntos(_,_)),						
+	asserta(diccionario(Lineas)),
+	consult(Caracteres).								% Cargar el nuevo diccionario
 
 cargar_diccionario(_):- throw('No se ha podido cargar el diccionario').
 
