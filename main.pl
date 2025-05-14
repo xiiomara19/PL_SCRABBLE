@@ -10,7 +10,7 @@
 			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores y si ha ganado o perdido
 			diccionario/1,				% Guarda el diccionario de palabras segun el idioma de la partida
 			tablero/1,					% Guarda el tablero de juego
-			fichas_jugador/2,			% Guarda las fichas de cada jugador
+			fichas_jugador/2.			% Guarda las fichas de cada jugador
 
 % Opciones de configuración
 :- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
@@ -92,7 +92,7 @@ establecer_opcion(_,_):- throw('No existe el apartado de configuracion especific
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TABLERO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% crear_tablero tiene éxito si TableroFinal es una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
+% crear_tablero tiene éxito siempre y crea una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
 % especial o estar vacía.
 crear_tablero :-
     crear_tablero_base(TableroVacio),								% Crear el tablero vacío
@@ -100,7 +100,7 @@ crear_tablero :-
     insertar_celdas_especiales(PosEspeciales, TableroVacio, TableroFinal),
 	retractall(tablero(_)), asserta(tablero(TableroFinal)). 		% Guardar el tablero creado
 
-% crear_tablero_base(-B) tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador 'SC').
+% crear_tablero_base(-B) tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador '---').
 crear_tablero_base(B):-
 	length(Row, 15), maplist(=(' --- '), Row), 	% Crea una fila con N elementos vacíos
     length(B, 15), maplist(=(Row), B).    				% Repite esa fila N veces para crear la matriz
@@ -268,7 +268,7 @@ otro_jugador(maquina, player).
 
 formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada').
 formar_palabra(J,_,_,_,_):- siguiente_ronda(P), P=\=J, throw('No es el turno del jugador J').
-formar_palabra(J,_,_,_,P):- 
+formar_palabra(_,_,_,_,P):- 
 	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
 formar_palabra(J,O,F,C,P):- 
 	empezado(1),
