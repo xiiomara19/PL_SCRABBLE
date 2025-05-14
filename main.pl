@@ -25,16 +25,21 @@
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % cargar_diccionario(+L) tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
 % con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
 cargar_diccionario(L):- 
+	atomic_list_concat(['palabras_', L, '.pl'], Caracteres),
 	atomic_list_concat(['words.', L, '.txt'], Fichero),  	% Crear el nombre del archivo
 	open(Fichero, read, Stream),		
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
-	retractall(diccionario(_)),									% Limpiar el diccionario actual	
-	asserta(diccionario(Lineas)).								% Cargar el nuevo diccionario
+	retractall(diccionario(_)),							% Limpiar el diccionario actual	
+	retractall(char_puntos(_,_)),						
+	asserta(diccionario(Lineas)),
+	consult(Caracteres).								% Cargar el nuevo diccionario
 
 cargar_diccionario(_):- throw('No se ha podido cargar el diccionario').
 
