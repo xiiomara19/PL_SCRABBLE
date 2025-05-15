@@ -210,15 +210,15 @@ mean_list(L, M) :-
 % aparecen ordenados de manera descendente según el porcentaje de victorias; en la segunda, junto a cada nombre de jugador aparece su puntuación máxima y media, 
 % y los jugadores aparecen ordenados de manera descendente según su puntuación media
 ver_ranking:- 
-	findall(J, historial_puntuaciones(J, _, _), Jugadores),				% Obtiene la lista de jugadores
+	findall((J,P), historial_puntuaciones(J, P, w), Jugadores),				% Obtiene la lista de jugadores
 	findall(P, historial_puntuaciones(_, P, _), Puntos),				% Obtiene la lista de puntuaciones
 	length(Jugadores, NJugadores),										% Obtiene el número de jugadores
 	findall(P, (member(Jugadores, Jugadores), member(P, Puntos)), PJugadores),	% Obtiene la lista de puntuaciones de los jugadores
 	sort(2, @>=, [Jugadores-PJugadores], SortedJugadores),				% Ordena la lista de jugadores por puntuación
-	format('Ranking de jugadores: ~n', []),
-	print_ranking(SortedJugadores),
-	format('Ranking de puntuaciones: ~n', []),
-	print_ranking(PJugadores).
+	format('Ranking de jugadores: ~w ~n', [SortedJugadores]),
+	%print_ranking(SortedJugadores),
+	format('Ranking de puntuaciones: ~w ~n', [PJugadores]).
+	%print_ranking(PJugadores).
 
 
 
@@ -238,7 +238,6 @@ jugar_ordenador:-
 
 jugar_ordenador:- throw('El jugador no es la máquina').
 
-% calcular_puntos
 
 % validar_palabra(+P) tiene éxito si Palabra es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
 validar_palabra(P):- var(P), !, throw('Debe especificar una palabra').
@@ -248,7 +247,3 @@ validar_palabra(P):-
 validar_palabra(_):- throw('La palabra no existe en el diccionario').
 
 % validar_fichas_palabra (tiene las fichas necesarias para formar la palabra)
-
-
-
-
