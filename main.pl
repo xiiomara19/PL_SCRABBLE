@@ -181,9 +181,18 @@ ver_resumen:- empezado(0), throw('No hay ninguna partida iniciada').
 ver_resumen:- 
 	empezado(1),																													% Comprobamos que hay una partida iniciada
 	empieza(E), modo(M), reparto(R), idioma(I),																						% Obtenemos las opciones de configuración
-	format('Modo de juego: ~w~n', [M]), format('Idioma: ~w~n', [I]), format('Reparto: ~w~n', [R]), format('Empieza: ~w~n', [E]) 	% Mostramos las opciones de configuración
-	.
-
+	writeln('Configuracion de la partida:'), 																	% Mostramos la configuración de la partida
+	format('Modo de juego: ~w~n', [M]), format('Idioma: ~w~n', [I]), format('Reparto: ~w~n', [R]), format('Empieza: ~w~n', [E]), 	% Mostramos las opciones de configuración														% Obtenemos el resumen del turno
+	writeln('Resumen por turno:'), 																	
+	forall(
+        resumen_turno(J, W, P, F),
+        (																									% Mostramos el resumen del turno
+            format('Jugador           : ~w~n', [J]),
+            format('Palabra           : ~w~n', [W]),
+            format('Puntos obtenidos  : ~w~n', [P]),
+            format('Fichas disponibles: ~w~n~n', [F])
+        )
+    ).
 % ver_historial(+J) muestra el historial del jugador J: número de victorias y derrotas, puntuación máxima y puntuación media.
 ver_historial(J):- var(J), !, throw('Debe especificar un jugador').
 ver_historial(J):- \+member(J, [player, player_1, player_2, ordenador]), !, throw('El jugador no es válido').
@@ -211,6 +220,7 @@ mean_list(L, M) :-
 % y los jugadores aparecen ordenados de manera descendente según su puntuación media
 ver_ranking:- 
 	findall((J,P), historial_puntuaciones(J, P, w), Jugadores),				% Obtiene la lista de jugadores
+	findall((J,P), historial_puntuaciones(J, P, l), Perdidos),				% Obtiene la lista de jugadores perdidos
 	findall(P, historial_puntuaciones(_, P, _), Puntos),				% Obtiene la lista de puntuaciones
 	length(Jugadores, NJugadores),										% Obtiene el número de jugadores
 	findall(P, (member(Jugadores, Jugadores), member(P, Puntos)), PJugadores),	% Obtiene la lista de puntuaciones de los jugadores
