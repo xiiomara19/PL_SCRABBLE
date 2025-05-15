@@ -9,7 +9,7 @@ crear_tablero :-
 	retractall(tablero(_)), asserta(tablero(TableroVacio)),									% Crear el tablero vacío
     celdas_especiales(PosEspeciales),										% Obtener las posiciones de las celdas especiales
     insertar_celdas_especiales(PosEspeciales),
-	mostrar_tablero(). 				% Guardar el tablero creado
+	mostrar_tablero. 														% Mostrar el tablero creado
 
 % crear_tablero_base(-B) 
 % tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador '---').

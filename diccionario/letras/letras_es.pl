@@ -29,7 +29,7 @@
 
 :-assertz(char_puntos_apariciones(j,8,1)).
 :-assertz(char_puntos_apariciones(x,8,1)).
-:-assertz(char_puntos_apariciones(ñ,8,1)).
+:-assertz(char_puntos_apariciones("ñ",8,1)).
 
 :-assertz(char_puntos_apariciones(z,10,1)).
 

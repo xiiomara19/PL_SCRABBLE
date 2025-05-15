@@ -39,11 +39,11 @@ bolsa_letras(B) :-
     findall(L, letra_repetida(L), LetrasRepetidas),
     flatten(LetrasRepetidas, B).
 
-% letra_repetida(-ListaDeLetraRepetida)
+% letra_repetida(-LR)
 % Por cada letra en el diccionario, genera una lista con esa letra repetida N veces
 letra_repetida(LR) :-
-    char_puntos_apariciones(R, _, C),
-    length(LR, Cant),
+    char_puntos_apariciones(L, _, C),
+    length(LR, C),
     maplist(=(L), LR).
 
 % actualizar_letra_usada(+L)

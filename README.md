@@ -21,11 +21,11 @@
 - [x] iniciar_partida(+J1,+J2)
 - [x] abandonar_partida(+J)
 - [x] otro_jugador(+J,+O)
-- [x] actualizar_tablero(+O,+F,+C,+L)
 - [ ] usa_letra(O,F,C,B,L)
 - [ ] comprobar_limites(P, L)
 - [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
 - [ ] asignar_fichas(+J,+F)
+- [ ] obtener_fichas(+F,+J,-L) 
 - [x] mostrar_fichas(+J)
 - [x] mostrar_puntuación
 - [ ] ver_resumen
@@ -49,6 +49,9 @@
 
 - [x] cargar_diccionario(+L)
 - [x] obtener_lineas(+S,-L)
+- [x] bolsa_letras(-B)
+- [x] letra_repetida(-LR)
+- [x] actualizar_letra_usada(+L)
 
 ### tablero.pl
 
@@ -62,6 +65,7 @@
 - [x] mostrar_tablero
 - [x] mostrar_fila (+S,+R)
 - [x] mostrar_item(+C)
+- [x] actualizar_tablero(+O,+F,+C,+L)
 
 ### logica.pl
 
