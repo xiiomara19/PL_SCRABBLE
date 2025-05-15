@@ -1,3 +1,7 @@
+:-	dynamic
+			resumen_turno/4.
+
+
 
 %FORMAR_PALABRA(+J,+O,+F,+C,+P)
 %  Si hay una partida iniciada y es el turno del jugador J, formar_palabra(+J,+O,+F,+C,+P) introduce la palabra P en orientación O (horizontal o vertical) 
@@ -13,8 +17,8 @@ formar_palabra(J,O,F,C,P):-
     validar_palabra(P),
 	empezado(1),
 	%siguiente_ronda(J),
+    fichas_jugador(J,Fichas),
 	atom_chars(P,L),
-    %fichas_jugador(J,B),
 	length(L,X),
     usa_letra(O,F,C,L), 
 	(
@@ -22,9 +26,25 @@ formar_palabra(J,O,F,C,P):-
 		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
 	),
     letras_en_tablero(O,F,C,X,R),
-	comprobar_si_encaja(J,O,F,C,L,1,0), 
+    eliminar_si_posible(L,R,I),
+    eliminar_si_posible(I,Fichas,I2), 
+    length(I2,0),
+    eliminar_si_posible(Fichas,I,Fichas_restantes),
+	comprobar_si_encaja(J,O,F,C,L,1,0,Puntuacion_final), 
 	actualizar_tablero(O,F,C,L),
-	mostrar_tablero.
+	mostrar_tablero,
+    write('Palabra formada: '), writeln(P),
+    write('Puntuacion obtenida: '), writeln(Puntuacion_final),
+    write('Fichas disponibles: '), writeln(Fichas_restantes),
+    asserta(resumen_turno(J,P,Puntuacion_final,Fichas_restantes)).
+
+
+eliminar_si_posible(Lista, Sub, Resultado) :-
+    foldl(eliminar_si_existe, Sub, Lista, Resultado).
+
+eliminar_si_existe(Elem, Lista, Resultado) :-
+    ( select(Elem, Lista, Resultado) -> true
+    ; Resultado = Lista ).
 
 
 %letras_en_tablero(+O,+F,+C,+L,?R)
@@ -92,30 +112,29 @@ comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
 
 % comprobar_si_encaja(+J,+O,+F,+C,+L,+M,+P) comprueba si la palabra L encaja en el tablero B en la posicion (F,C) y devuelve la puntuacion obtenida en P,
 % se le suman los puntos al posicionar cada letra, en M guarda el multiplicador de la palabra
-comprobar_si_encaja(J,_,_,_,[],M,P):- 
+comprobar_si_encaja(J,_,_,_,[],M,P,P_palabra):- 
 	P_palabra is M*P, 
 	puntuacion(J, P_total), 
 	Puntuacion is P_palabra+P_total, 
 	retractall(puntuacion(J,_)),
-	asserta(puntuacion(J,Puntuacion)),
-	writeln(Puntuacion).
+	asserta(puntuacion(J,Puntuacion)).
 
 % si se encuentra el caracter en la posicion correspondiente sumar puntos y seguir con el resto de la palabra
-comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
+comprobar_si_encaja(J,h,F,C,[H|T],M,P,Puntuacion_final):- 
 	get_cell(F,C,H),
 	X is C+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
-	comprobar_si_encaja(J,h,F,X,T,M,P2).
-comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
+	comprobar_si_encaja(J,h,F,X,T,M,P2,Puntuacion_final).
+comprobar_si_encaja(J,v,F,C,[H|T],M,P,Puntuacion_final):- 
 	get_cell(F,C,H), 
 	X is F+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
-	comprobar_si_encaja(J,v,X,C,T,M,P2).
+	comprobar_si_encaja(J,v,X,C,T,M,P2,Puntuacion_final).
 
 % Si es una celda vacia comprobar los multiplicadores de dicha celda y seguir con el resto de la palabra
-comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
+comprobar_si_encaja(J,h,F,C,[H|T],M,P,Puntuacion_final):- 
 	get_cell(F,C,Z), 
 	celdas_posibles(L), 
 	member(Z,L),
@@ -126,8 +145,8 @@ comprobar_si_encaja(J,h,F,C,[H|T],M,P):-
 	P3 is P+P2,
 	X is C+1, 
 	M2 is M*Mul_palabra,
-	comprobar_si_encaja(J,h,F,X,T,M2,P3).
-comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
+	comprobar_si_encaja(J,h,F,X,T,M2,P3,Puntuacion_final).
+comprobar_si_encaja(J,v,F,C,[H|T],M,P,Puntuacion_final):- 
 	get_cell(F,C,Z),
 	celdas_posibles(L), 
 	member(Z,L), 
@@ -138,7 +157,7 @@ comprobar_si_encaja(J,v,F,C,[H|T],M,P):-
 	P3 is P+P2,
 	X is F+1, 
 	M2 is M*Mul_palabra,
-	comprobar_si_encaja(J,v,X,C,T,M2,P3).
+	comprobar_si_encaja(J,v,X,C,T,M2,P3,Puntuacion_final).
 
 
 % multiplicador_letra(?C,?V)
