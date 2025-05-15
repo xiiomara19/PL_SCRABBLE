@@ -9,17 +9,17 @@
 			ronda_inicial/1, 			% Jugador que empieza la partida: player_1 o player_2
 			siguiente_ronda/1,			% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
 			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores y si ha ganado o perdido		
-			fichas_jugador/2.			% Guarda las fichas de cada jugador
+			fichas_jugador/2.			% Guarda el nombre del jugador y sus fichas
 
 % Opciones de configuración iniciales del juego
 :- assertz(ronda_inicial(player)).		% Jugador que empieza la partida: player
-:- assertz(siguiente_ronda(end)).		% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
+:- assertz(siguiente_ronda(end)).		% Jugador que tiene el turno: player, ordenador, player_1, player_2 o end (partida finalizada)
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARTIDA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% iniciar_partida(+J) (modo persona vs maquina) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
+% iniciar_partida(+J) (modo persona vs ordenador) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
 % entonces la llamada termina en error.
 
 iniciar_partida(_):- empezado(1), throw('Ya hay una partida iniciada').
@@ -29,12 +29,12 @@ iniciar_partida(player):-
 	modo(pve),																		% Comprobamos que el modo de juego es pve
 	idioma(L), cargar_diccionario(L),												% Cargamos el diccionario y las letras
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores	
-	asserta(puntuacion(player, 0)),	asserta(puntuacion(maquina, 0)),				% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
+	asserta(puntuacion(player, 0)),	asserta(puntuacion(ordenador, 0)),				% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
 	(
 		ronda_inicial(player) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
-		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(maquina))									% Comprobamos que la máquina empieza la partida y lo asignamos
+		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(ordenador))									% Comprobamos que la máquina empieza la partida y lo asignamos
 	),
-	crear_tablero. %mostrar_tablero.											% Creamos el tablero y lo mostramos por pantalla	
+	crear_tablero, mostrar_tablero.											% Creamos el tablero y lo mostramos por pantalla	
 
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
@@ -57,7 +57,7 @@ iniciar_partida(player_1, player_2):-
 % no está jugando, entonces la llamada termina en error.
 
 abandonar_partida(_):- empezado(0), throw('No hay ninguna partida iniciada').
-abandonar_partida(J):- \+member(J, [player, player_1, player_2, maquina]), throw('El jugador no está jugando').
+abandonar_partida(J):- \+member(J, [player, player_1, player_2, ordenador]), throw('El jugador no está jugando').
 abandonar_partida(J):- 
 	empezado(1), retractall(empezado(_)), asserta(empezado(0)),						% Comprobamos que hay una partida iniciada y la terminamos
 	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 					% Indicamos que la siguiente ronda es el final de la partida
@@ -72,8 +72,8 @@ abandonar_partida(J):-
 			assertz(historial_puntuaciones(J, P2, l))								% Añadimos el historial de puntuaciones del jugador perdedor
 		;
 			writeln('La máquina ha ganado la partida.'),
-			puntuacion(maquina, P1), puntuacion(player, P2),						% Obtenemos la puntuación de ambos jugadores
-			assertz(historial_puntuaciones(maquina, P1, w)),						% Añadimos el historial de puntuaciones del jugador ganador
+			puntuacion(ordenador, P1), puntuacion(player, P2),						% Obtenemos la puntuación de ambos jugadores
+			assertz(historial_puntuaciones(ordenador, P1, w)),						% Añadimos el historial de puntuaciones del jugador ganador
 			assertz(historial_puntuaciones(player, P2, l))							% Añadimos el historial de puntuaciones del jugador perdedor
 	),
 	(
@@ -85,8 +85,8 @@ abandonar_partida(J):-
 % otro_jugador(+J,+O) tiene éxito si O es el jugador que le toca jugar contra J. Si J no es un jugador válido, entonces la llamada termina en error.
 otro_jugador(player_1, player_2):- !.
 otro_jugador(player_2, player_1):- !.
-otro_jugador(player, maquina):- !.
-otro_jugador(maquina, player):- !.
+otro_jugador(player, ordenador):- !.
+otro_jugador(ordenador, player):- !.
 otro_jugador(_, _):- throw('El jugador no es válido').
 
 
@@ -108,7 +108,7 @@ mostrar_puntuacion:- empezado(0), throw('No hay ninguna partida iniciada').
 mostrar_puntuacion:- 
 	empezado(1),																% Comprobamos que hay una partida iniciada
 	(
-		modo(pvp) -> puntuacion(player, P1), puntuacion(maquina, P2);			% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2 (la máquina)
+		modo(pvp) -> puntuacion(player, P1), puntuacion(ordenador, P2);			% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2 (la máquina)
 		puntuacion(player_1, P1), puntuacion(player_2, P2)						% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2
 	),
 	format('Puntuación del jugador 1: ~w~n', [P1]), format('Puntuación del jugador 2: ~w~n', [P2]). 	
@@ -122,13 +122,13 @@ mostrar_puntuacion:-
 ver_resumen:- empezado(0), throw('No hay ninguna partida iniciada').
 ver_resumen:- 
 	empezado(1),																													% Comprobamos que hay una partida iniciada
-	opcionesEmpieza(E), opcionesModo(M), opcionesReparto(R), opcionesIdioma(I),														% Obtenemos las opciones de configuración
+	empieza(E), modo(M), reparto(R), idioma(I),														% Obtenemos las opciones de configuración
 	format('Modo de juego: ~w~n', [M]), format('Idioma: ~w~n', [I]), format('Reparto: ~w~n', [R]), format('Empieza: ~w~n', [E]) 	% Mostramos las opciones de configuración
 	.
 
 % ver_historial(+J) muestra el historial del jugador J: número de victorias y derrotas, puntuación máxima y puntuación media.
 ver_historial(J):- var(J), !, throw('Debe especificar un jugador').
-ver_historial(J):- \+member(J, [player, player_1, player_2, maquina]), !, throw('El jugador no es válido').
+ver_historial(J):- \+member(J, [player, player_1, player_2, ordenador]), !, throw('El jugador no es válido').
 ver_historial(J):- findall(P,
 	(historial_puntuaciones(J,P,l)),	
 	L), length(L, NL), 						% Obtiene el número de partidas perdidas
@@ -158,21 +158,22 @@ mean_list(L, M) :-
 % jugar_A
 
 % jugar_B
-% jugar_maquina tiene éxito si el jugador es la máquina y se le asigna el turno. Si el jugador no es la máquina, entonces la llamada termina en error.
-jugar_maquina:- 
-	siguiente_ronda(maquina), 							% Si el jugador es la máquina, se le asigna el turno
+% jugar_ordenador tiene éxito si el jugador es la máquina y se le asigna el turno. Si el jugador no es la máquina, entonces la llamada termina en error.
+jugar_ordenador:- 
+	siguiente_ronda(ordenador), 							% Si el jugador es la máquina, se le asigna el turno
 	tablero(B), 										% Se obtiene el tablero actual
-	fichas_jugador(maquina, Fichas), 					% Se obtiene la lista de letras disponibles para la máquina
+	fichas_jugador(ordenador, Fichas), 					% Se obtiene la lista de letras disponibles para la máquina
 	generar_palabra_aleatoria(Fichas, Palabra), 		% Se genera una palabra aleatoria
 	obtener_posicion_aleatoria(Palabra, B, Posicion), 	% Se obtiene una posición aleatoria en el tablero
-	formar_palabra(maquina, h, Posicion, Palabra),		% Se forma la palabra en el tablero
+	formar_palabra(ordenador, h, Posicion, Palabra),		% Se forma la palabra en el tablero
 	siguiente_ronda(jugador).							% Se asigna el turno al jugador
 
-jugar_maquina:- throw('El jugador no es la máquina').
+jugar_ordenador:- throw('El jugador no es la máquina').
 
 % calcular_puntos
 
 % validar_palabra(+P) tiene éxito si Palabra es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
+validar_palabra(P):- var(P), !, throw('Debe especificar una palabra').
 validar_palabra(P):- 
 	diccionario(D), 
 	member(P, D), !.

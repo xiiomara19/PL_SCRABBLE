@@ -20,7 +20,7 @@
 - [x] iniciar_partida(+J)
 - [x] iniciar_partida(+J1,+J2)
 - [x] abandonar_partida(+J)
-- [ ] otro_jugador(+J,+O)
+- [x] otro_jugador(+J,+O)
 - [ ] formar_palabra(+J,+O,+F,+C,+P)
 - [ ] actualizar_tablero(+O,+F,+C,+B,+L)
 - [ ] usa_letra(O,F,C,B,L)
@@ -28,16 +28,16 @@
 - [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
 - [ ] asignar_fichas(+J,+F)
 - [ ] mostrar_fichas(+J)
-- [ ] mostrar_puntuación
+- [x] mostrar_puntuación
 - [ ] ver_resumen
-- [ ] ver_historial(+J)
-- [ ] mean_list(+L,-M)
+- [x] ver_historial(+J)
+- [x] mean_list(+L,-M)
 - [ ] ver_ranking
 - [ ] jugar_A
 - [ ] jugar_B
 - [ ] jugar_maquina
 - [ ] calcular_puntos
-- [ ] validar_palabra(+P)
+- [x] validar_palabra(+P)
 - [ ] validar_fichas
 - [ ] validar_posicion
 
@@ -63,3 +63,6 @@
 - [x] mostrar_tablero
 - [x] mostrar_fila (+S,+R)
 - [x] mostrar_item(+C)
+
+
+### logica.pl
