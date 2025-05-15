@@ -9,14 +9,14 @@
 %		dinamico char_puntos_apariciones(Letra,Puntos,Cantidad)
 % Si el archivo no existe o no se puede abrir, la llamada termina en error.
 cargar_diccionario(L):- 
-	atomic_list_concat(['./palabras/words.', L, '.txt'], Diccionario),  	% Crear el nombre del archivo de palabras
+	atomic_list_concat(['./diccionario/palabras/words.', L, '.txt'], Diccionario),  	% Crear el nombre del archivo de palabras
 	open(Diccionario, read, Stream, [encoding(utf8)]),						% Abrir el archivo en modo lectura con codificación UTF-8
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
 	retractall(diccionario(_)),												% Limpiar el diccionario actual	
 	retractall(char_puntos(_,_)),						
 	asserta(diccionario(Lineas)),											% Cargar el archivo de palabras
-	atomic_list_concat(['./letras/letras_', L, '.pl'], Caracteres),			% Crear el nombre del archivo de letras
+	atomic_list_concat(['./diccionario/letras/letras_', L, '.pl'], Caracteres),			% Crear el nombre del archivo de letras
 	consult(Caracteres).													% Cargar el archivo de letras
 
 cargar_diccionario(_):- throw('No se ha podido cargar el diccionario').
