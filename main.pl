@@ -296,20 +296,19 @@ formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada'
 formar_palabra(J,O,F,C,P):- 
 	empezado(1),
 	siguiente_ronda(J),
-	tablero(B), 
 	atom_chars(P,L), 
 	length(L,X), 
 	(
 		O = h -> comprobar_limites(C,X), comprobar_limites(F,0);
 		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
 	),
-	comprobar_si_encaja(J,O,F,C,B,L,1,0),
+	comprobar_si_encaja(J,O,F,C,L,1,0),
 	usa_letra(O,F,C,L), 
-	actualizar_tablero(O,F,C,B,L),
+	actualizar_tablero(O,F,C,L),
 	mostrar_tablero.
 
 % ctualizar_tablero(+O,+F,+C,+B,+L) dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
-actualizar_tablero(_,_,_,_,[]).
+actualizar_tablero(_,_,_,[]).
 actualizar_tablero(h,F,C,[H|T]):- set_cell(F,C,H), X is C+1, actualizar_tablero(h,F,X,T).
 actualizar_tablero(v,F,C,[H|T]):- set_cell(F,C,H), X is F+1, actualizar_tablero(v,X,C,T).
 
@@ -332,20 +331,20 @@ usa_letra(v,F,C,[H|T]):-
 comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
 
 % comprobar_si_encaja(+J,+O,+F,+C,+B,+L,+M,+P) comprueba si la palabra L encaja en el tablero B en la posicion (F,C) y devuelve la puntuacion obtenida
-comprobar_si_encaja(J,_,_,_,_,[],M,P):- 
+comprobar_si_encaja(J,_,_,_,[],M,P):- 
 	P_palabra is M*P, 
 	puntuacion(J, P_total), 
 	Puntuacion is P_palabra+P_total, 
 	retractall(puntuacion(J,_)),
 	asserta(puntuacion(J,Puntuacion)),
 	writeln(Puntuacion).
-comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):- 
+comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
 	get_cell(F,C,H), 
 	X is C+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
-	comprobar_si_encaja(J,h,F,X,B,T,M,P2).
-comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):- 
+	comprobar_si_encaja(J,h,F,X,T,M,P2).
+comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
 	get_cell(F,C,Z), 
 	celdas_posibles(L), 
 	member(Z,L),
@@ -357,14 +356,14 @@ comprobar_si_encaja(J,h,F,C,B,[H|T],M,P):-
 	write(Z ),writeln(Mul_letra),
 	X is C+1, 
 	M2 is max(M,Mul_palabra),
-	comprobar_si_encaja(J,h,F,X,B,T,M2,P3).
-comprobar_si_encaja(J,v,F,C,B,[H|T],M,P):- 
+	comprobar_si_encaja(J,h,F,X,T,M2,P3).
+comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
 	get_cell(F,C,H), 
 	X is F+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
-	comprobar_si_encaja(J,h,X,C,B,T,M,P2).
-comprobar_si_encaja(v,F,C,B,[H|T],M,P):- 
+	comprobar_si_encaja(J,h,X,C,T,M,P2).
+comprobar_si_encaja(v,F,C,[H|T],M,P):- 
 	get_cell(F,C,Z), 
 	celdas_posibles(L), 
 	member(Z,L), 
@@ -375,7 +374,7 @@ comprobar_si_encaja(v,F,C,B,[H|T],M,P):-
 	P3 is P+P2,
 	X is F+1, 
 	M2 is max(M,Mul_palabra),
-	comprobar_si_encaja(h,X,C,B,T,M2,P3).
+	comprobar_si_encaja(h,X,C,T,M2,P3).
 
 
 multiplicador_letra(' DL  ',2).
