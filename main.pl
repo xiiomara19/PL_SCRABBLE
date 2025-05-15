@@ -65,7 +65,6 @@ abandonar_partida(J):-
 	empezado(1), retractall(empezado(_)), asserta(empezado(0)),							% Comprobamos que hay una partida iniciada y la terminamos
 	siguiente_ronda(J),		 															% Comprobamos que el jugador J tiene el turno
 	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 						% Indicamos que la siguiente ronda es el final de la partida
-	puntuacion(I,P), assertz(historial_puntuaciones(I,P)), 								% Añadimos el historial de puntuaciones del jugador
 	retractall(puntuacion(_, _)), 														% Retractamos la puntuación de los jugadores						 
 	(
 		modo(pvp) ->
@@ -208,7 +207,7 @@ ver_historial(J):- findall(P,
 	append(L,W,R),							% Une las listas de partidas ganadas y perdidas
 	max_list(R, Max),						% Obtiene la puntuación máxima
 	mean_list(R, Mean),						% Obtiene la puntuación media
-	format('El jugador ~w ha ganado ~w partidas y ha perdido ~w partidas.~n Su puntuación máxima es ~w y la puntuación media es ~w~n', [J, NW, NL, Max, Mean]).
+	format('El jugador ~w ha ganado ~w partidas y ha perdido ~w partidas.~n Su puntuación máxima es ~w y la puntuación media es ~2f%~n', [J, NW, NL, Max, Mean]).
 
 % mean_list(+L,-M) tiene éxito si M es la media de los elementos de la lista L.
 mean_list(L, M) :- 
@@ -218,20 +217,29 @@ mean_list(L, M) :-
 	M is Sum / N.
 	
 	
-% ver_ranking muestra dos listas de jugadores: en la primera, junto a cada nombre de jugador aparece su número y porcentaje de partidas ganadas, y los jugadores 
-% aparecen ordenados de manera descendente según el porcentaje de victorias; en la segunda, junto a cada nombre de jugador aparece su puntuación máxima y media, 
-% y los jugadores aparecen ordenados de manera descendente según su puntuación media
+% ver_ranking muestra dos listas de jugadores: 
+%	1. junto a cada nombre de jugador aparece su número y porcentaje de partidas ganadas, y los jugadores aparecen ordenados de manera descendente según el porcentaje de victorias 
+%	2. junto a cada nombre de jugador aparece su puntuación máxima y media, y los jugadores aparecen ordenados de manera descendente según su puntuación media
 ver_ranking:- 
-	findall((J,P), historial_puntuaciones(J, P, w), Jugadores),				% Obtiene la lista de jugadores
-	findall((J,P), historial_puntuaciones(J, P, l), Perdidos),				% Obtiene la lista de jugadores perdidos
-	findall(P, historial_puntuaciones(_, P, _), Puntos),				% Obtiene la lista de puntuaciones
-	length(Jugadores, NJugadores),										% Obtiene el número de jugadores
-	findall(P, (member(Jugadores, Jugadores), member(P, Puntos)), PJugadores),	% Obtiene la lista de puntuaciones de los jugadores
-	sort(2, @>=, [Jugadores-PJugadores], SortedJugadores),				% Ordena la lista de jugadores por puntuación
-	format('Ranking de jugadores: ~w ~n', [SortedJugadores]),
-	%print_ranking(SortedJugadores),
-	format('Ranking de puntuaciones: ~w ~n', [PJugadores]).
-	%print_ranking(PJugadores).
+	findall(J, historial_puntuaciones(J, _, _), Jugadores),				% Obtiene la lista de jugadores repetidos
+	sort(Jugadores, JSinRepetir),								% Elimina los jugadores repetidos
+	findall(est(J,W,L,P), 
+	(
+		member(J, JSinRepetir),
+		findall(P, historial_puntuaciones(J, P, w), LW),			% Obtiene la lista de jugadores ganados
+		findall(P,historial_puntuaciones(J, P, l), LL),				% Obtiene la lista de jugadores perdidos
+		length(LW, W), length(LL, L),								% Obtiene el número de partidas ganadas y perdidas
+		T is W + L, 
+		(
+			T > 0 -> P is (W * 100) / T; 
+			P is 0
+		)
+	),
+	Estadisticas),											% Obtiene una lista de estadísticas de los jugadores
+	sort(4, @>=, Estadisticas, JOrdenados),					% Ordena la lista de jugadores por el porcentaje de victorias
+
+    forall(member((J, W, L, P), JOrdenados),
+        format('Jugador: ~w, Ganadas: ~w, Perdidas: ~w, Porcentaje: ~2f%~n', [J, W, L, P])).
 
 
 
