@@ -239,8 +239,4 @@ validar_palabra(_):- throw('La palabra no existe en el diccionario').
 
 
 
-% actualizar_tablero(+O,+F,+C,+L) 
-% dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
-actualizar_tablero(_,_,_,[]).
-actualizar_tablero(h,F,C,[H|T]):- set_cell(F,C,H), X is C+1, actualizar_tablero(h,F,X,T).
-actualizar_tablero(v,F,C,[H|T]):- set_cell(F,C,H), X is F+1, actualizar_tablero(v,X,C,T).
+

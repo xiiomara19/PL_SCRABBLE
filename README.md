@@ -70,5 +70,3 @@
 - [x] multiplicador_letra(?C,?V)
 - [x] multiplicador_palabra(?C,?V)
 - [x] celdas_posibles(-L)
-
-

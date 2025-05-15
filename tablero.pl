@@ -113,3 +113,9 @@ mostrar_fila(S,R):- write(S), nl, write('|'), maplist(mostrar_item, R), nl .
 % mostrar_item(+C) tiene éxito siempre y escribe su valor en pantalla
 mostrar_item(C):- atom_chars(C,L), length(L,X), X is 5, write(C), write('|').
 mostrar_item(C):- atom_chars(C,L), length(L,X), X is 1, write('  '), write(C), write('  '), write('|').
+
+% actualizar_tablero(+O,+F,+C,+L) 
+% dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
+actualizar_tablero(_,_,_,[]).
+actualizar_tablero(h,F,C,[H|T]):- set_cell(F,C,H), X is C+1, actualizar_tablero(h,F,X,T).
+actualizar_tablero(v,F,C,[H|T]):- set_cell(F,C,H), X is F+1, actualizar_tablero(v,X,C,T).
