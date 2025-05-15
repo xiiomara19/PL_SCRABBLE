@@ -21,8 +21,7 @@
 - [x] iniciar_partida(+J1,+J2)
 - [x] abandonar_partida(+J)
 - [x] otro_jugador(+J,+O)
-- [ ] formar_palabra(+J,+O,+F,+C,+P)
-- [ ] actualizar_tablero(+O,+F,+C,+B,+L)
+- [x] actualizar_tablero(+O,+F,+C,+L)
 - [ ] usa_letra(O,F,C,B,L)
 - [ ] comprobar_limites(P, L)
 - [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
@@ -66,3 +65,11 @@
 
 
 ### logica.pl
+
+- [ ] formar_palabra(+J,+O,+F,+C,+P)
+- [x] letras_en_tablero(+O,+F,+C,+L,?R)
+- [x] multiplicador_letra(?C,?V)
+- [x] multiplicador_palabra(?C,?V)
+- [x] celdas_posibles(-L)
+
+

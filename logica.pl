@@ -10,6 +10,8 @@ formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada'
 %formar_palabra(_,_,_,_,P):- 
 %	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
 formar_palabra(J,O,F,C,P):- 
+    validar_palabra(P),
+    member(P,Z),
 	empezado(1),
 	%siguiente_ronda(J),
 	atom_chars(P,L), 
@@ -19,56 +21,56 @@ formar_palabra(J,O,F,C,P):-
 		O = h -> comprobar_limites(C,X), comprobar_limites(F,0);
 		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
 	),
-    pillar_letras(O,F,C,X,R),
-    write(R),
+    letras_en_tablero(O,F,C,X,R),
 	comprobar_si_encaja(J,O,F,C,L,1,0), 
 	actualizar_tablero(O,F,C,L),
 	mostrar_tablero.
 
 
-pillar_letras(h,F,C,L,R):-
+%letras_en_tablero(+O,+F,+C,+L,?R)
+% Recorre L posiciones del tablero desde (F,C) en la orientacion o y guarda 
+% todas las letras que se encuentren en R
+letras_en_tablero(h,F,C,L,R):-
     get_cell(F,C,Z),
     X is C+1,
     L > 0,
     L2 is L-1,
     celdas_posibles(Celdas), 
 	\+member(Z,Celdas),
-    pillar_letras(h,F,X,L2,R2),
+    letras_en_tablero(h,F,X,L2,R2),
     R = [Z|R2].
 
-pillar_letras(h,F,C,L,R):-
+letras_en_tablero(h,F,C,L,R):-
     get_cell(F,C,Z),
     X is C+1,
     L > 0,
     L2 is L-1,
-    pillar_letras(h,F,X,L2,R).
+    celdas_posibles(Celdas), 
+	member(Z,Celdas),
+    letras_en_tablero(h,F,X,L2,R).
 
-pillar_letras(v,F,C,L,R):-
+letras_en_tablero(v,F,C,L,R):-
     get_cell(F,C,Z),
     X is F+1,
     L > 0,
     L2 is L-1,
     celdas_posibles(Celdas), 
 	\+member(Z,Celdas),
-    pillar_letras(v,X,C,L2,R2),
+    letras_en_tablero(v,X,C,L2,R2),
     R = [Z|R2].
 
-pillar_letras(v,F,C,L,R):-
+letras_en_tablero(v,F,C,L,R):-
     get_cell(F,C,Z),
     X is F+1,
     L > 0,
     L2 is L-1,
-    pillar_letras(v,X,C,L2,R).
+    celdas_posibles(Celdas), 
+	member(Z,Celdas),
+    letras_en_tablero(v,X,C,L2,R).
 
-pillar_letras(_,_,_,0,[]).
+letras_en_tablero(_,_,_,0,[]).
 
 
-
-
-% ctualizar_tablero(+O,+F,+C,+B,+L) dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
-actualizar_tablero(_,_,_,[]).
-actualizar_tablero(h,F,C,[H|T]):- set_cell(F,C,H), X is C+1, actualizar_tablero(h,F,X,T).
-actualizar_tablero(v,F,C,[H|T]):- set_cell(F,C,H), X is F+1, actualizar_tablero(v,X,C,T).
 
 % usa_letra(O,F,C,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
 % en la posicion correspondiente
@@ -88,7 +90,8 @@ usa_letra(v,F,C,[H|T]):-
 % comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
 comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
 
-% comprobar_si_encaja(+J,+O,+F,+C,+B,+L,+M,+P) comprueba si la palabra L encaja en el tablero B en la posicion (F,C) y devuelve la puntuacion obtenida
+% comprobar_si_encaja(+J,+O,+F,+C,+L,+M,+P) comprueba si la palabra L encaja en el tablero B en la posicion (F,C) y devuelve la puntuacion obtenida en P,
+% se le suman los puntos al posicionar cada letra, en M guarda el multiplicador de la palabra
 comprobar_si_encaja(J,_,_,_,[],M,P):- 
 	P_palabra is M*P, 
 	puntuacion(J, P_total), 
@@ -97,13 +100,21 @@ comprobar_si_encaja(J,_,_,_,[],M,P):-
 	asserta(puntuacion(J,Puntuacion)),
 	writeln(Puntuacion).
 
+% si se encuentra el caracter en la posicion correspondiente sumar puntos y seguir con el resto de la palabra
 comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
 	get_cell(F,C,H),
 	X is C+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
 	comprobar_si_encaja(J,h,F,X,T,M,P2).
+comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
+	get_cell(F,C,H), 
+	X is F+1, 
+	char_puntos_apariciones(H,Puntos,_),
+	P2 is P+Puntos,
+	comprobar_si_encaja(J,v,X,C,T,M,P2).
 
+% Si es una celda vacia comprobar los multiplicadores de dicha celda y seguir con el resto de la palabra
 comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
 	get_cell(F,C,Z), 
 	celdas_posibles(L), 
@@ -116,14 +127,6 @@ comprobar_si_encaja(J,h,F,C,[H|T],M,P):-
 	X is C+1, 
 	M2 is M*Mul_palabra,
 	comprobar_si_encaja(J,h,F,X,T,M2,P3).
-
-comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
-	get_cell(F,C,H), 
-	X is F+1, 
-	char_puntos_apariciones(H,Puntos,_),
-	P2 is P+Puntos,
-	comprobar_si_encaja(J,v,X,C,T,M,P2).
-
 comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
 	get_cell(F,C,Z),
 	celdas_posibles(L), 
@@ -138,59 +141,18 @@ comprobar_si_encaja(J,v,F,C,[H|T],M,P):-
 	comprobar_si_encaja(J,v,X,C,T,M2,P3).
 
 
+% multiplicador_letra(?C,?V)
+% dada una posible celda devuelve el multiplicador a aplicar a una letra
 multiplicador_letra(' DL  ',2).
 multiplicador_letra(' TL  ',3).
 multiplicador_letra(_,1).
 
-
+% multiplicador_palabra(?C,?V)
+% dada una posible celda devuelve el multiplicador a aplicar a una palabra
 multiplicador_palabra(' DP  ',2).
 multiplicador_palabra(' TP  ',3).
 multiplicador_palabra(_,1).
 
-
+% celdas_posibles(-L)
+% devuelve una lista de las celdas que se encuentran en el tablero por defecto
 celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% comprobar_prefijo(+O,+F,+C,R) dada posicion F,C y una orientacion (izquierda o arriba dependiendo de la orientacion)
-% miarará si existe algun prefijo en la tabla y lo devolvera en R
-
-%Llega a la celda vacia
-comprobar_prefijo(h,F,C,[]):-
-	C >= 0,
-	get_cell(F,C,T),
-	celdas_posibles(L), 
-	member(T,L), !.
-
-comprobar_prefijo(h,F,C,R):-
-	C >= 0,
-	get_cell(F,C,T),
-	X is C-1,
-	comprobar_prefijo(h,F,X,T2),
-    R = [T|T2],!.    
-
-comprobar_prefijo(_,_,C,[]):- C<0,!.
-
-
-
-% comprobar_sufijo(+O,+F,+C,L,R) dada una palabra, su posicion F,C y su orientacion miarará si hay que concatenarla con algun sufijo
-% (derecha o abajo dependiendo de la orientacion) y devolvera la nueva palabra en R
