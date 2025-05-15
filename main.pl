@@ -1,3 +1,6 @@
+:- consult('./diccionario/diccionario.pl').		% Cargar el diccionario de palabras
+:- consult('configuracion.pl').					% Cargar la configuración del juego
+
 :-	dynamic
 			idioma/1,					% Idioma en el que se forma
 			modo/1,                 	% Modo de juego: pvp o pve
@@ -21,81 +24,6 @@
 :- assertz(siguiente_ronda(end)).		% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
 
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% cargar_diccionario(+L) 
-% tiene éxito si el diccionario de palabras y letras en el idioma Idioma se carga correctamente. El diccionario esta compuesto por dos archivos de texto:
-% 	1. El archivo de palabras, que se encuentra en la carpeta 'palabras' y tiene el nombre 'words.Idioma.txt'. 
-% 	2. El archivo de letras, puntuacion y cantidad, que se encuentra en la carpeta 'letras' y tiene el nombre 'letras_Idioma.pl'. Este lo carga en el predicado 
-%		dinamico char_puntos_apariciones(Letra,Puntos,Cantidad)
-% Si el archivo no existe o no se puede abrir, la llamada termina en error.
-cargar_diccionario(L):- 
-	atomic_list_concat(['./palabras/words.', L, '.txt'], Diccionario),  	% Crear el nombre del archivo de palabras
-	open(Diccionario, read, Stream, [encoding(utf8)]),						% Abrir el archivo en modo lectura con codificación UTF-8
-	obtener_lineas(Stream, Lineas),
-	close(Stream), !,
-	retractall(diccionario(_)),												% Limpiar el diccionario actual	
-	retractall(char_puntos(_,_)),						
-	asserta(diccionario(Lineas)),											% Cargar el archivo de palabras
-	atomic_list_concat(['./letras/letras_', L, '.pl'], Caracteres),			% Crear el nombre del archivo de letras
-	consult(Caracteres).													% Cargar el archivo de letras
-
-cargar_diccionario(_):- throw('No se ha podido cargar el diccionario').
-
-
-% obtener_lineas(+Stream,-Lineas) 
-% tiene éxito si Lineas es una lista de palabras leídas desde el flujo Stream. Cada palabra se considera una línea del archivo.
-obtener_lineas(Stream, []) :-
-    at_end_of_stream(Stream), !.
-
-obtener_lineas(Stream, [Palabra|Resto]) :-
-    read_line_to_codes(Stream, Codes),
-    atom_codes(Palabra, Codes),
-    obtener_lineas(Stream, Resto).
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CONFIGURACION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%==========Predicados para comprobar que las nuevas opciones son correctas============
-opcionesIdioma(eus):-!.
-opcionesIdioma(es):- !.
-opcionesIdioma(en):- !.
-opcionesIdioma(_):- throw('No existe ese idioma').
-
-
-opcionesModo(pve):- !.
-opcionesModo(pvp):- !.
-opcionesModo(_):- throw('No existe ese modo de juego').
-
-opcionesReparto(aleatorio):- !.
-opcionesReparto(manual):- !.
-opcionesReparto(_):- throw('No existe ese modo de reparto').
-
-opcionesEmpieza(0):- !.
-opcionesEmpieza(1):- !.
-opcionesEmpieza(_):- throw('No existe ese modo de inicio').
-
-% ver_opcion(+O) 
-% muestra el valor establecido en el apartado de configuración O. Si el apartado de configuración O no existe, la llamada termina en error.
-ver_opcion(idioma):- idioma(A), write(A), !.
-ver_opcion(modo):- modo(A), write(A), !.
-ver_opcion(reparto):- reparto(A), write(A), !.
-ver_opcion(empieza):- empieza(A), write(A), !.
-ver_opcion(_):- throw('Error esa opcion no existe').
-
-% establecer_opcion(+O,+V)
-% Si no hay ninguna partida iniciada, establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
-% de configuración O no existe o bien si el valor V no se corresponde con el apartado de configuración O, entonces la llamada termina en error.
-establecer_opcion(_,_):- empezado(1), throw('No se pueden cambiar las opciones de configuracion mientras hay una partida en curso').
-establecer_opcion(idioma,A):- empezado(0), opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)), !.
-establecer_opcion(modo,A):- empezado(0), opcionesModo(A), retract(modo(_)), asserta(modo(A)), !.
-establecer_opcion(reparto,A):- empezado(0),  opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)), !.
-establecer_opcion(empieza,A):- empezado(0), opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)), !.
-establecer_opcion(_,_):- throw('No existe el apartado de configuracion especificado').
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TABLERO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
