@@ -83,4 +83,6 @@
 - Hacer retract de todo al finalizar
 - Jueguen los jugadores (play_A, play_B, play_maquina)
 - Ganar/perder
-- Ver_ranking, ver_resumen
+- Ver_ranking
+- Comodines
+- Docu
