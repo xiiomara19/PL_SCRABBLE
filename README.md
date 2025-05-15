@@ -15,20 +15,8 @@
 
 ## Predicados a realizar
 
-- [x] cargar_diccionario(+L)
-- [x] obtener_lineas(+S,-L)
-- [x] ver_opcion(+O)
-- [x] establecer_opcion(+O,+V)
-- [x] crear_tablero
-- [x] crear_tablero_base(-B)
-- [x] celdas_especiales(+C)
-- [x] insertar_celdas_especiales(+C,+BoardIn,-BoardOut)
-- [ ] set_cell(+F,+C,+V,+BoardIn,-BoardOut)
-- [ ] reemplazar_celda(+C,+RowIn,+NewValue,-RowOut)
-- [ ] get_cell(+F,+C,+B,-R)
-- [x] mostrar_tablero(+B)
-- [x] mostrar_fila (+S,+R)
-- [x] mostrar_item(+C)
+### main.pl
+
 - [x] iniciar_partida(+J)
 - [x] iniciar_partida(+J1,+J2)
 - [x] abandonar_partida(+J)
@@ -50,7 +38,28 @@
 - [ ] jugar_maquina
 - [ ] calcular_puntos
 - [ ] validar_palabra(+P)
-- [ ] validar_palabraCompuesta(+PalabraTablero,+PalabraJugada)
 - [ ] validar_fichas
 - [ ] validar_posicion
-  
+
+### configuracion.pl
+
+- [x] ver_opcion(+O)
+- [x] establecer_opcion(+O,+V)
+
+### diccionario.pl
+
+- [x] cargar_diccionario(+L)
+- [x] obtener_lineas(+S,-L)
+
+### tablero.pl
+
+- [x] crear_tablero
+- [x] crear_tablero_base(-B)
+- [x] celdas_especiales(-C)
+- [x] insertar_celdas_especiales(+C,+BoardIn,-BoardOut)
+- [ ] set_cell(+F,+C,+V,+BoardIn,-BoardOut)
+- [ ] reemplazar_celda(+C,+RowIn,+NewValue,-RowOut)
+- [ ] get_cell(+F,+C,+B,-R)
+- [x] mostrar_tablero
+- [x] mostrar_fila (+S,+R)
+- [x] mostrar_item(+C)
