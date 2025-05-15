@@ -1,3 +1,15 @@
+:-	dynamic
+			idioma/1,					% Idioma en el que se forma
+			modo/1,                 	% Modo de juego: pvp o pve
+			reparto/1,              	% Modo en el que se reparten las fichas
+			empieza/1.              	% Indica que jugador empezará
+
+% Opciones de configuración iniciales
+:- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
+:- assertz(modo(pve)).	            	% Modo de juego por defecto: pve
+:- assertz(reparto(aleatorio)).	    	% Modo en el que se reparten las fichas por defecto: aleatorio
+:- assertz(empieza(0)).		    		% Modo de inicio de partida: normal
+
 %==========Predicados para comprobar que las nuevas opciones son correctas============
 opcionesIdioma(eus):-!.
 opcionesIdioma(es):- !.

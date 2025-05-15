@@ -1,5 +1,5 @@
 :- dynamic
-        diccionario/1,
+        diccionario/1,					% Guarda el diccionario de palabras segun el idioma de la partida
         char_puntos_apariciones/3.
 
 % cargar_diccionario(+L) 

@@ -3,27 +3,16 @@
 :- consult('tablero.pl').						% Cargar el tablero de juego
 
 :-	dynamic
-			idioma/1,					% Idioma en el que se forma
-			modo/1,                 	% Modo de juego: pvp o pve
-			reparto/1,              	% Modo en el que se reparten las fichas
-			empieza/1,              	% Indica que jugador empezará
 			puntuacion/2,           	% Guarda la puntuación asociada con cada jugador
 			empezado/1,             	% Indica si hay una partida en progreso (0: no, 1: si)
 			ronda_inicial/1, 			% Jugador que empieza la partida: player_1 o player_2
 			siguiente_ronda/1,			% Jugador que tiene el turno: player_1, player_2 o end (partida finalizada)
-			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores y si ha ganado o perdido
-			diccionario/1,				% Guarda el diccionario de palabras segun el idioma de la partida
-			tablero/1,					% Guarda el tablero de juego
+			historial_puntuaciones/3,	% Guarda el historial de puntuaciones de los jugadores y si ha ganado o perdido		
 			fichas_jugador/2.			% Guarda las fichas de cada jugador
 
-% Opciones de configuración
-:- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
-:- assertz(modo(pve)).	            	% Modo de juego por defecto: pve
-:- assertz(reparto(aleatorio)).	    	% Modo en el que se reparten las fichas por defecto: aleatorio
-:- assertz(empieza(0)).		    		% Modo de inicio de partida: normal
+% Opciones de configuración iniciales del juego
 :- assertz(ronda_inicial(player)).		% Jugador que empieza la partida: player
 :- assertz(siguiente_ronda(end)).		% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
-
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
 

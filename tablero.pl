@@ -1,3 +1,6 @@
+:- dynamic
+			tablero/1,					% Guarda el tablero de juego
+
 % crear_tablero 
 % tiene éxito siempre y crea una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
 % especial o estar vacía.
