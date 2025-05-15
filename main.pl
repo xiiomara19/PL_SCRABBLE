@@ -18,7 +18,7 @@
 :- assertz(reparto(aleatorio)).	    	% Modo en el que se reparten las fichas por defecto: aleatorio
 :- assertz(empieza(0)).		    		% Modo de inicio de partida: normal
 :- assertz(ronda_inicial(player)).		% Jugador que empieza la partida: player
-:- assertz(siguiente_ronda(end)).			% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
+:- assertz(siguiente_ronda(end)).		% Jugador que tiene el turno: player, maquina, player_1, player_2 o end (partida finalizada)
 
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
@@ -26,8 +26,11 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% cargar_diccionario(+L) tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
+
+% cargar_diccionario(+L) 
+% tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
 % con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
+% Tambien carga las letras, su puntuacion y la cantidad de estas en el predicado dinamico char_puntos_apariciones(Letra,Puntos,Cantidad)
 cargar_diccionario(L):- 
 	atomic_list_concat(['palabras_', L, '.pl'], Caracteres),
 	atomic_list_concat(['words.', L, '.txt'], Fichero),  	% Crear el nombre del archivo
@@ -41,7 +44,9 @@ cargar_diccionario(L):-
 
 cargar_diccionario(_):- throw('No se ha podido cargar el diccionario').
 
-% obtener_lineas(+Stream,-Lineas) tiene éxito si Lineas es una lista de palabras leídas desde el flujo Stream. Cada palabra se considera una línea del archivo.
+
+% obtener_lineas(+Stream,-Lineas) 
+% tiene éxito si Lineas es una lista de palabras leídas desde el flujo Stream. Cada palabra se considera una línea del archivo.
 obtener_lineas(Stream, []) :-
     at_end_of_stream(Stream), !.
 
@@ -71,14 +76,16 @@ opcionesEmpieza(0):- !.
 opcionesEmpieza(1):- !.
 opcionesEmpieza(_):- throw('No existe ese modo de inicio').
 
-% ver_opcion(+O) muestra el valor establecido en el apartado de configuración O. Si el apartado de configuración O no existe, la llamada termina en error.
+% ver_opcion(+O) 
+% muestra el valor establecido en el apartado de configuración O. Si el apartado de configuración O no existe, la llamada termina en error.
 ver_opcion(idioma):- idioma(A), write(A), !.
 ver_opcion(modo):- modo(A), write(A), !.
 ver_opcion(reparto):- reparto(A), write(A), !.
 ver_opcion(empieza):- empieza(A), write(A), !.
 ver_opcion(_):- throw('Error esa opcion no existe').
 
-% Si no hay ninguna partida iniciada, establecer_opcion(+O,+V) establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
+% establecer_opcion(+O,+V)
+% Si no hay ninguna partida iniciada, establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
 % de configuración O no existe o bien si el valor V no se corresponde con el apartado de configuración O, entonces la llamada termina en error.
 establecer_opcion(_,_):- empezado(1), throw('No se pueden cambiar las opciones de configuracion mientras hay una partida en curso').
 establecer_opcion(idioma,A):- empezado(0), opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)), cargar_diccionario(A), !.
@@ -90,20 +97,24 @@ establecer_opcion(_,_):- throw('No existe el apartado de configuracion especific
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TABLERO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% crear_tablero()
 % crear_tablero tiene éxito siempre y crea una matriz de 15x15 que representa el tablero de juego, donde cada celda puede contener un valor 
 % especial o estar vacía.
 crear_tablero :-
-    crear_tablero_base(TableroVacio),								% Crear el tablero vacío
-    celdas_especiales(PosEspeciales),								% Obtener las posiciones de las celdas especiales
-    insertar_celdas_especiales(PosEspeciales, TableroVacio, TableroFinal),
-	retractall(tablero(_)), asserta(tablero(TableroFinal)). 		% Guardar el tablero creado
+    crear_tablero_base(TableroVacio),	
+	retractall(tablero(_)), asserta(tablero(TableroVacio)),									% Crear el tablero vacío
+    celdas_especiales(PosEspeciales),										% Obtener las posiciones de las celdas especiales
+    insertar_celdas_especiales(PosEspeciales),
+	mostrar_tablero(). 				% Guardar el tablero creado
 
-% crear_tablero_base(-B) tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador '---').
+% crear_tablero_base(-B) 
+% tiene éxito si B es una matriz de 15x15 que representa el tablero de juego, donde cada celda está vacía (representada por el identificador '---').
 crear_tablero_base(B):-
-	length(Row, 15), maplist(=(' --- '), Row), 	% Crea una fila con N elementos vacíos
+	length(Row, 15), maplist(=(' --- '), Row), 			% Crea una fila con N elementos vacíos
     length(B, 15), maplist(=(Row), B).    				% Repite esa fila N veces para crear la matriz
 
-% celdas_especiales(+C) tiene éxito si C es una lista de celdas especiales, donde cada celda especial es una tupla (F,C,T) que indica la fila F, la columna C y 
+% celdas_especiales(+C) 
+% tiene éxito si C es una lista de celdas especiales, donde cada celda especial es una tupla (F,C,T) que indica la fila F, la columna C y 
 % el tipo T de la celda especial. Hay cuatro tipos de celdas especiales:
 % 	1. TP (Triple Palabra): multiplica por 3 la puntuación de la palabra formada en esa celda.
 % 	2. DP (Doble Palabra): multiplica por 2 la puntuación de la palabra formada en esa celda.
@@ -137,16 +148,20 @@ celdas_especiales([
 	(7, 7, '  *  ')
 ]).
 
-% insertar_celdas_especiales(+C,+BoardIn,-BoardOut) tiene éxito si BoardOut es el tablero BoardIn con las celdas especiales de C insertadas.
-insertar_celdas_especiales([], Board, Board).
-insertar_celdas_especiales([(F,C,V)|T], BoardIn, BoardOut) :-
-    set_cell(F, C, V, BoardIn, BoardTemp),
-    insertar_celdas_especiales(T, BoardTemp, BoardOut).
+% insertar_celdas_especiales(+C,+BoardIn,-BoardOut) 
+% tiene éxito si BoardOut es el tablero BoardIn con las celdas especiales de C insertadas.
+insertar_celdas_especiales([]).
+insertar_celdas_especiales([(F,C,V)|T]) :-
+    set_cell(F, C, V),
+    insertar_celdas_especiales(T).
 
-% set_cell(+F,+C,+V,+BoardIn,-BoardOut) tiene éxito si BoardOut es el tablero BoardIn con la celda (F,C) reemplazada por el valor V.
-set_cell(F, C, V, BoardIn, BoardOut) :-
+% set_cell(+F,+C,+V) 
+% tiene éxito si BoardOut es el tablero BoardIn con la celda (F,C) reemplazada por el valor V.
+set_cell(F, C, V) :-
+	tablero(B),
+
     % Extraer la fila en posición F
-    append(TopRows, [OldRow|BottomRows], BoardIn),
+    append(TopRows, [OldRow|BottomRows], B),
     length(TopRows, F),
 
     % Reemplazar la columna C en esa fila
@@ -165,7 +180,7 @@ reemplazar_celda(C, RowIn, NewValue, RowOut) :-
 
 %get_cell(+F,+C,-R) dadas la fila y columna F y C devolvera el caracter en R que se encuentre en esa posicion en el tablero B
 get_cell(F,C,R):- 
-	board(B),
+	tablero(B),
 	X is F+1,
 	nth1(X,B,Fila),
 	Y is C+1,
@@ -289,14 +304,14 @@ formar_palabra(J,O,F,C,P):-
 		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
 	),
 	comprobar_si_encaja(J,O,F,C,B,L,1,0),
-	usa_letra(O,F,C,B,L), 
+	usa_letra(O,F,C,L), 
 	actualizar_tablero(O,F,C,B,L),
 	mostrar_tablero.
 
 % ctualizar_tablero(+O,+F,+C,+B,+L) dada una lista de caracteres los escribe en el tablero B en la posiocion (F,C) en la orientacion O
 actualizar_tablero(_,_,_,_,[]).
-actualizar_tablero(h,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is C+1, actualizar_tablero(h,F,X,B2,T).
-actualizar_tablero(v,F,C,B,[H|T]):- set_cell(F,C,H,B,B2), X is F+1, actualizar_tablero(v,X,C,B2,T).
+actualizar_tablero(h,F,C,[H|T]):- set_cell(F,C,H), X is C+1, actualizar_tablero(h,F,X,T).
+actualizar_tablero(v,F,C,[H|T]):- set_cell(F,C,H), X is F+1, actualizar_tablero(v,X,C,T).
 
 % usa_letra(O,F,C,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
 % en la posicion correspondiente
