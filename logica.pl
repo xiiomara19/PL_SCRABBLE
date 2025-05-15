@@ -11,10 +11,10 @@ formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada'
 %	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
 formar_palabra(J,O,F,C,P):- 
     validar_palabra(P),
-    member(P,Z),
 	empezado(1),
 	%siguiente_ronda(J),
-	atom_chars(P,L), 
+	atom_chars(P,L),
+    %fichas_jugador(J,B),
 	length(L,X),
     usa_letra(O,F,C,L), 
 	(
