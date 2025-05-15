@@ -11,46 +11,56 @@ formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada'
 %	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
 formar_palabra(J,O,F,C,P):- 
 	empezado(1),
-	siguiente_ronda(J),
+	%siguiente_ronda(J),
 	atom_chars(P,L), 
 	length(L,X),
-	usa_letra(O,F,C,L), 
+    usa_letra(O,F,C,L), 
 	(
-		O = h -> 
-			comprobar_limites(C,X), comprobar_limites(F,0);
-			C_ant is C-1, comprobar_prefijo(O,C_ant,C,R), write(R);
-		O = v -> comprobar_limites(C,0), comprobar_limites(F,X),
-			F_ant is F-1
+		O = h -> comprobar_limites(C,X), comprobar_limites(F,0);
+		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
 	),
+    pillar_letras(O,F,C,X,R),
+    write(R),
 	comprobar_si_encaja(J,O,F,C,L,1,0), 
 	actualizar_tablero(O,F,C,L),
 	mostrar_tablero.
 
 
-% comprobar_prefijo(+O,+F,+C,R) dada posicion F,C y una orientacion (izquierda o arriba dependiendo de la orientacion)
-% miarará si existe algun prefijo en la tabla y lo devolvera en R
+pillar_letras(h,F,C,L,R):-
+    get_cell(F,C,Z),
+    X is C+1,
+    L > 0,
+    L2 is L-1,
+    celdas_posibles(Celdas), 
+	\+member(Z,Celdas),
+    pillar_letras(h,F,X,L2,R2),
+    R = [Z|R2].
 
-%Llega a la celda vacia
-comprobar_prefijo(h,F,C,[]):-
-	C >= 0,
-	get_cell(F,C,T),
-	celdas_posibles(L), 
-	member(T,L), !.
+pillar_letras(h,F,C,L,R):-
+    get_cell(F,C,Z),
+    X is C+1,
+    L > 0,
+    L2 is L-1,
+    pillar_letras(h,F,X,L2,R).
 
-comprobar_prefijo(h,F,C,R):-
- 	trace,
-	C >= 0,
-	get_cell(F,C,T),
-	R is [T|T2],
-	X is C-1,
-	comprobar_prefijo(h,F,X,T2).
+pillar_letras(v,F,C,L,R):-
+    get_cell(F,C,Z),
+    X is F+1,
+    L > 0,
+    L2 is L-1,
+    celdas_posibles(Celdas), 
+	\+member(Z,Celdas),
+    pillar_letras(v,X,C,L2,R2),
+    R = [Z|R2].
 
-comprobar_prefijo(_,_,_,[]).
+pillar_letras(v,F,C,L,R):-
+    get_cell(F,C,Z),
+    X is F+1,
+    L > 0,
+    L2 is L-1,
+    pillar_letras(v,X,C,L2,R).
 
-
-
-% comprobar_sufijo(+O,+F,+C,L,R) dada una palabra, su posicion F,C y su orientacion miarará si hay que concatenarla con algun sufijo
-% (derecha o abajo dependiendo de la orientacion) y devolvera la nueva palabra en R
+pillar_letras(_,_,_,0,[]).
 
 
 
@@ -88,11 +98,11 @@ comprobar_si_encaja(J,_,_,_,[],M,P):-
 	writeln(Puntuacion).
 
 comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
-	get_cell(F,C,H), 
+	get_cell(F,C,H),
 	X is C+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
-	comprobar_si_encaja(J,h,F,X,T,M,P2),!.
+	comprobar_si_encaja(J,h,F,X,T,M,P2).
 
 comprobar_si_encaja(J,h,F,C,[H|T],M,P):- 
 	get_cell(F,C,Z), 
@@ -105,17 +115,17 @@ comprobar_si_encaja(J,h,F,C,[H|T],M,P):-
 	P3 is P+P2,
 	X is C+1, 
 	M2 is M*Mul_palabra,
-	comprobar_si_encaja(J,h,F,X,T,M2,P3),!.
+	comprobar_si_encaja(J,h,F,X,T,M2,P3).
 
 comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
 	get_cell(F,C,H), 
 	X is F+1, 
 	char_puntos_apariciones(H,Puntos,_),
 	P2 is P+Puntos,
-	comprobar_si_encaja(J,h,X,C,T,M,P2),!.
+	comprobar_si_encaja(J,v,X,C,T,M,P2).
 
-comprobar_si_encaja(v,F,C,[H|T],M,P):- 
-	get_cell(F,C,Z), 
+comprobar_si_encaja(J,v,F,C,[H|T],M,P):- 
+	get_cell(F,C,Z),
 	celdas_posibles(L), 
 	member(Z,L), 
 	char_puntos_apariciones(H,Puntos,_),
@@ -125,7 +135,7 @@ comprobar_si_encaja(v,F,C,[H|T],M,P):-
 	P3 is P+P2,
 	X is F+1, 
 	M2 is M*Mul_palabra,
-	comprobar_si_encaja(h,X,C,T,M2,P3),!.
+	comprobar_si_encaja(J,v,X,C,T,M2,P3).
 
 
 multiplicador_letra(' DL  ',2).
@@ -139,3 +149,48 @@ multiplicador_palabra(_,1).
 
 
 celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% comprobar_prefijo(+O,+F,+C,R) dada posicion F,C y una orientacion (izquierda o arriba dependiendo de la orientacion)
+% miarará si existe algun prefijo en la tabla y lo devolvera en R
+
+%Llega a la celda vacia
+comprobar_prefijo(h,F,C,[]):-
+	C >= 0,
+	get_cell(F,C,T),
+	celdas_posibles(L), 
+	member(T,L), !.
+
+comprobar_prefijo(h,F,C,R):-
+	C >= 0,
+	get_cell(F,C,T),
+	X is C-1,
+	comprobar_prefijo(h,F,X,T2),
+    R = [T|T2],!.    
+
+comprobar_prefijo(_,_,C,[]):- C<0,!.
+
+
+
+% comprobar_sufijo(+O,+F,+C,L,R) dada una palabra, su posicion F,C y su orientacion miarará si hay que concatenarla con algun sufijo
+% (derecha o abajo dependiendo de la orientacion) y devolvera la nueva palabra en R
