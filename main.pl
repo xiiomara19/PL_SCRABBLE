@@ -28,26 +28,23 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DICCIONARIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % cargar_diccionario(+L) 
-% tiene éxito si el diccionario de palabras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
-% con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
-% Tambien carga las letras, su puntuacion y la cantidad de estas en el predicado dinamico char_puntos_apariciones(Letra,Puntos,Cantidad)
+% tiene éxito si el diccionario de palabras y letras en el idioma Idioma se carga correctamente. El diccionario esta compuesto por dos archivos de texto:
+% 	1. El archivo de palabras, que se encuentra en la carpeta 'palabras' y tiene el nombre 'words.Idioma.txt'. 
+% 	2. El archivo de letras, puntuacion y cantidad, que se encuentra en la carpeta 'letras' y tiene el nombre 'letras_Idioma.pl'. Este lo carga en el predicado 
+%		dinamico char_puntos_apariciones(Letra,Puntos,Cantidad)
+% Si el archivo no existe o no se puede abrir, la llamada termina en error.
 cargar_diccionario(L):- 
-	atomic_list_concat(['./diccionarios/words.', L, '.txt'], Diccionario),  	% Crear el nombre del archivo
-	open(Diccionario, read, Stream, [encoding(utf8)]),							% Abrir el archivo en modo lectura con codificación UTF-8
+	atomic_list_concat(['./palabras/words.', L, '.txt'], Diccionario),  	% Crear el nombre del archivo de palabras
+	open(Diccionario, read, Stream, [encoding(utf8)]),						% Abrir el archivo en modo lectura con codificación UTF-8
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
-	retractall(diccionario(_)),													% Limpiar el diccionario actual	
+	retractall(diccionario(_)),												% Limpiar el diccionario actual	
 	retractall(char_puntos(_,_)),						
-	asserta(diccionario(Lineas)).												% Cargar el nuevo diccionario
+	asserta(diccionario(Lineas)),											% Cargar el archivo de palabras
+	atomic_list_concat(['./letras/letras_', L, '.pl'], Caracteres),			% Crear el nombre del archivo de letras
+	consult(Caracteres).													% Cargar el archivo de letras
 
 cargar_diccionario(_):- throw('No se ha podido cargar el diccionario').
-
-% cargar_letras(+L) tiene éxito si el diccionario de letras en el idioma Idioma se carga correctamente. El diccionario debe estar en un archivo de texto
-cargar_letras(L):- 
-	atomic_list_concat(['./letras/letras_', L, '.pl'], Caracteres),	% Crear el nombre del archivo
-	consult(Caracteres).											% Cargar las letras validas, su puntuación y la cantidad de estas
-
-cargar_letras(_):- throw('No se ha podido cargar el diccionario de letras').
 
 
 % obtener_lineas(+Stream,-Lineas) 
@@ -93,10 +90,10 @@ ver_opcion(_):- throw('Error esa opcion no existe').
 % Si no hay ninguna partida iniciada, establece el apartado de configuración O al valor V. Si hay una partida iniciada, el apartado 
 % de configuración O no existe o bien si el valor V no se corresponde con el apartado de configuración O, entonces la llamada termina en error.
 establecer_opcion(_,_):- empezado(1), throw('No se pueden cambiar las opciones de configuracion mientras hay una partida en curso').
-establecer_opcion(idioma,A):- empezado(0), opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)), cargar_diccionario(A), cargar_letras(A), !.
-establecer_opcion(modo,A):- empezado(0), opcionesModo(A), retract(modo(_)), asserta(modo(A)),  cargar_diccionario(A), cargar_letras(A), !.
-establecer_opcion(reparto,A):- empezado(0),  opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)),  cargar_diccionario(A), cargar_letras(A), !.
-establecer_opcion(empieza,A):- empezado(0), opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)),  cargar_diccionario(A), cargar_letras(A), !.
+establecer_opcion(idioma,A):- empezado(0), opcionesIdioma(A), retract(idioma(_)), asserta(idioma(A)), !.
+establecer_opcion(modo,A):- empezado(0), opcionesModo(A), retract(modo(_)), asserta(modo(A)), !.
+establecer_opcion(reparto,A):- empezado(0),  opcionesReparto(A), retract(reparto(_)), asserta(reparto(A)), !.
+establecer_opcion(empieza,A):- empezado(0), opcionesEmpieza(A), retract(empieza(_)), asserta(empieza(A)), !.
 establecer_opcion(_,_):- throw('No existe el apartado de configuracion especificado').
 
 
@@ -226,7 +223,7 @@ iniciar_partida(_):- modo(pvp), throw('Modo de juego incorrecto, se esperaba pve
 iniciar_partida(player):- 
 	empezado(0), retractall(empezado(_)), asserta(empezado(1)), 					% Comprobamos que no haya una partida iniciada y la iniciamos
 	modo(pve),																		% Comprobamos que el modo de juego es pve
-	idioma(L), cargar_diccionario(L), cargar_letras(L),								% Cargamos el diccionario y las letras
+	idioma(L), cargar_diccionario(L),												% Cargamos el diccionario y las letras
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores	
 	asserta(puntuacion(player, 0)),	asserta(puntuacion(maquina, 0)),				% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
 	(
@@ -243,7 +240,7 @@ iniciar_partida(_,_):- modo(pve), throw('Modo de juego incorrecto, se esperaba p
 iniciar_partida(player_1, player_2):- 
 	empezado(0), retractall(empezado(_)), asserta(empezado(1)),						% Comprobamos que no haya una partida iniciada y la iniciamos
 	modo(pvp), 																		% Comprobamos que el modo de juego es pvp
-	idioma(L), cargar_diccionario(L), cargar_letras(L),								% Cargamos el diccionario y las letras
+	idioma(L), cargar_diccionario(L), 												% Cargamos el diccionario y las letras
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores
 	asserta(puntuacion(player_1 , 0)), asserta(puntuacion(player_2, 0)),			% Inicializamos la puntuación del jgador 1 y el jugador 2 a 0
 	(
