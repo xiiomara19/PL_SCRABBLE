@@ -27,7 +27,7 @@
 - [ ] comprobar_limites(P, L)
 - [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
 - [ ] asignar_fichas(+J,+F)
-- [ ] mostrar_fichas(+J)
+- [x] mostrar_fichas(+J)
 - [x] mostrar_puntuación
 - [ ] ver_resumen
 - [x] ver_historial(+J)
@@ -63,6 +63,5 @@
 - [x] mostrar_tablero
 - [x] mostrar_fila (+S,+R)
 - [x] mostrar_item(+C)
-
 
 ### logica.pl

@@ -31,3 +31,26 @@ obtener_lineas(Stream, [Palabra|Resto]) :-
     read_line_to_codes(Stream, Codes),
     atom_codes(Palabra, Codes),
     obtener_lineas(Stream, Resto).
+
+
+% bolsa_letras(-B)
+% Genera la bolsa completa de letras, repitiendo cada letra según su cantidad
+bolsa_letras(B) :-
+    findall(L, letra_repetida(L), LetrasRepetidas),
+    flatten(LetrasRepetidas, B).
+
+% letra_repetida(-ListaDeLetraRepetida)
+% Por cada letra en el diccionario, genera una lista con esa letra repetida N veces
+letra_repetida(LR) :-
+    char_puntos_apariciones(R, _, C),
+    length(LR, Cant),
+    maplist(=(L), LR).
+
+% actualizar_letra_usada(+L)
+% Actualiza la cantidad de letras disponibles en la bolsa de letras al usar una letra
+actualizar_letra_usada(L) :-
+    char_puntos_apariciones(L, P, C),
+    C > 0,
+    retract(char_puntos_apariciones(L, P, C)),
+    C1 is C - 1,
+    ( C1 > 0 -> asserta(char_puntos_apariciones(L, P, C1)) ; true ).
