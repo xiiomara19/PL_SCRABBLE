@@ -182,8 +182,11 @@ ver_resumen:-
 	empezado(1),																													% Comprobamos que hay una partida iniciada
 	empieza(E), modo(M), reparto(R), idioma(I),																						% Obtenemos las opciones de configuración
 	writeln('Configuracion de la partida:'), 																	% Mostramos la configuración de la partida
-	format('Modo de juego: ~w~n', [M]), format('Idioma: ~w~n', [I]), format('Reparto: ~w~n', [R]), format('Empieza: ~w~n', [E]), 	% Mostramos las opciones de configuración														% Obtenemos el resumen del turno
-	writeln('Resumen por turno:'), 																	
+			format('Modo de juego	 : ~w~n', [M]), 
+			format('Idioma           : ~w~n', [I]), 
+			format('Reparto          : ~w~n', [R]), 
+			format('Empieza          : ~w~n', [E]), 	% Mostramos las opciones de configuración														% Obtenemos el resumen del turno
+	nl, writeln('Resumen por turno:'), 																	
 	forall(
         resumen_turno(J, W, P, F),
         (																									% Mostramos el resumen del turno

@@ -31,17 +31,17 @@ formar_palabra(J,O,F,C,P):-
     length(I2,0),
     eliminar_si_posible(Fichas,I,Fichas_restantes),
 	comprobar_si_encaja(J,O,F,C,L,1,0,Puntuacion_final), 
-	retract(fichas_jugador(J,_)),
-	retract(fichas_jugador(J,FichasRestantes)),
+	retractall(fichas_jugador(J,_)),
+	asserta(fichas_jugador(J,Fichas_restantes)),
 	actualizar_tablero(O,F,C,L),
 	mostrar_tablero,
     write('Palabra formada: '), writeln(P),
     write('Puntuacion obtenida: '), writeln(Puntuacion_final),
     write('Fichas disponibles: '), writeln(Fichas_restantes),
-    asserta(resumen_turno(J,P,Puntuacion_final,Fichas_restantes)),
+    assertz(resumen_turno(J,P,Puntuacion_final,Fichas_restantes)),
 	length(Fichas_restantes,N),
-	R is 7-N,
-	asignar_fichas(J,R).
+	Rest is 7-N,
+	asignar_fichas(J,Rest).
 
 
 eliminar_si_posible(Lista, Sub, Resultado) :-
