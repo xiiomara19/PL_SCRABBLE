@@ -32,9 +32,9 @@
 % con el nombre 'words.Idioma.txt' y debe contener una palabra por línea. Si el archivo no existe o no se puede abrir, la llamada termina en error.
 % Tambien carga las letras, su puntuacion y la cantidad de estas en el predicado dinamico char_puntos_apariciones(Letra,Puntos,Cantidad)
 cargar_diccionario(L):- 
-	atomic_list_concat(['palabras_', L, '.pl'], Caracteres),
-	atomic_list_concat(['words.', L, '.txt'], Fichero),  	% Crear el nombre del archivo
-	open(Fichero, read, Stream),		
+	atomic_list_concat(['./palabras/palabras_', L, '.pl'], Caracteres),
+	atomic_list_concat(['./diccionarios/words.', L, '.txt'], Diccionario),  	% Crear el nombre del archivo
+	open(Diccionario, read, Stream, [encoding(utf8)]),			% Abrir el archivo en modo lectura con codificación UTF-8
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
 	retractall(diccionario(_)),							% Limpiar el diccionario actual	
