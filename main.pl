@@ -27,7 +27,7 @@ iniciar_partida(_):- modo(pvp), !, throw('Modo de juego incorrecto, se esperaba 
 iniciar_partida(player):- 
 	empezado(0), retractall(empezado(_)), asserta(empezado(1)), 					% Comprobamos que no haya una partida iniciada y la iniciamos
 	modo(pve),																		% Comprobamos que el modo de juego es pve
-	%idioma(L), cargar_diccionario(L),												% Cargamos el diccionario y las letras
+	idioma(L), cargar_diccionario(L),												% Cargamos el diccionario y las letras
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores	
 	asserta(puntuacion(player, 0)),	asserta(puntuacion(ordenador, 0)),				% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
 	(
@@ -62,17 +62,17 @@ abandonar_partida(_):- empezado(0), !, throw('No hay ninguna partida iniciada').
 abandonar_partida(J):- \+member(J, [player, player_1, player_2, ordenador]), !, throw('El jugador no está jugando').
 abandonar_partida(J):- \+siguiente_ronda(J), !, throw('No es el turno del jugador J').	% Comprobamos que el jugador tiene el turno
 abandonar_partida(J):- 
-	empezado(1), retractall(empezado(_)), asserta(empezado(0)),						% Comprobamos que hay una partida iniciada y la terminamos
-	siguiente_ronda(J),		 														% Comprobamos que el jugador J tiene el turno
-	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 					% Indicamos que la siguiente ronda es el final de la partida
-	puntuacion(I,P), assertz(historial_puntuaciones(I,P)), 							% Añadimos el historial de puntuaciones del jugador
-	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores						 
+	empezado(1), retractall(empezado(_)), asserta(empezado(0)),							% Comprobamos que hay una partida iniciada y la terminamos
+	siguiente_ronda(J),		 															% Comprobamos que el jugador J tiene el turno
+	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 						% Indicamos que la siguiente ronda es el final de la partida
+	puntuacion(I,P), assertz(historial_puntuaciones(I,P)), 								% Añadimos el historial de puntuaciones del jugador
+	retractall(puntuacion(_, _)), 														% Retractamos la puntuación de los jugadores						 
 	(
 		modo(pvp) ->
 			otro_jugador(J, Ganador),
-			format('El jugador ~w ha ganado la partida.~n', [Ganador]),				% Mostramos quién gana
-			puntuacion(Ganador, P1), puntuacion(J, P2),								% Obtenemos la puntuación de ambos jugadores
-			assertz(historial_puntuaciones(Ganador, P1, w)),						% Añadimos el historial de puntuaciones del jugador ganador
+			format('El jugador ~w ha ganado la partida.~n', [Ganador]),					% Mostramos quién gana
+			puntuacion(Ganador, P1), puntuacion(J, P2),									% Obtenemos la puntuación de ambos jugadores
+			assertz(historial_puntuaciones(Ganador, P1, w)),							% Añadimos el historial de puntuaciones del jugador ganador
 			assertz(historial_puntuaciones(J, P2, l))								% Añadimos el historial de puntuaciones del jugador perdedor
 		;
 			writeln('La máquina ha ganado la partida.'),
@@ -209,6 +209,16 @@ mean_list(L, M) :-
 % ver_ranking muestra dos listas de jugadores: en la primera, junto a cada nombre de jugador aparece su número y porcentaje de partidas ganadas, y los jugadores 
 % aparecen ordenados de manera descendente según el porcentaje de victorias; en la segunda, junto a cada nombre de jugador aparece su puntuación máxima y media, 
 % y los jugadores aparecen ordenados de manera descendente según su puntuación media
+ver_ranking:- 
+	findall(J, historial_puntuaciones(J, _, _), Jugadores),				% Obtiene la lista de jugadores
+	findall(P, historial_puntuaciones(_, P, _), Puntos),				% Obtiene la lista de puntuaciones
+	length(Jugadores, NJugadores),										% Obtiene el número de jugadores
+	findall(P, (member(Jugadores, Jugadores), member(P, Puntos)), PJugadores),	% Obtiene la lista de puntuaciones de los jugadores
+	sort(2, @>=, [Jugadores-PJugadores], SortedJugadores),				% Ordena la lista de jugadores por puntuación
+	format('Ranking de jugadores: ~n', []),
+	print_ranking(SortedJugadores),
+	format('Ranking de puntuaciones: ~n', []),
+	print_ranking(PJugadores).
 
 
 

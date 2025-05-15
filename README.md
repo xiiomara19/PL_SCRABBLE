@@ -24,8 +24,9 @@
 - [ ] usa_letra(O,F,C,B,L)
 - [ ] comprobar_limites(P, L)
 - [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
-- [ ] asignar_fichas(+J,+F)
-- [ ] obtener_fichas(+F,+J,-L) 
+- [x] asignar_fichas(+J,+F)
+- [x] inicializar_fichas(+J)
+- [ ] obtener_fichas(+F,+J,-L)
 - [x] mostrar_fichas(+J)
 - [x] mostrar_puntuación
 - [ ] ver_resumen
