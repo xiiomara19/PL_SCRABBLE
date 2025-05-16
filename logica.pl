@@ -53,22 +53,47 @@ escribir_final_ronda(P,Puntos,F):-
 puede_escribir(O,F,C,L,Fichas,Fichas_restantes):-
 	length(L,X),
 	Fichas2 = Fichas,
+	contar_apariciones('$',Fichas,Comodines),
 	letras_en_tablero(O,F,C,X,R),
 	eliminar_si_posible(L,R,I),
-	eliminar_si_posible(I,Fichas2,I2), 
+	eliminar_si_posible(I,Fichas2,I2),
+	length(I2,A),
+	B is A - Comodines,
 	(
 		length(I,0)->throw('Hay que usar al menos una ficha de la bolsa');
-		length(I2,0)-> eliminar_si_posible(Fichas2,I,Fichas_restantes);
+		B is 0 ->write('Fichas: '), writeln(Fichas),
+		write('I: '), writeln(I),
+		eliminar_si_posible(Fichas,I,Fichas3),write('resultdo: '),write(Fichas3),
+		restar_comodines(A,Fichas3,Fichas_restantes), write('comodines_restados');
 		throw('No dispones de las fichas necesarias')
 	).
+
+% restar_comodines(A,F,R)
+% quita A comodines de la lista F y la devuelve en R
+restar_comodines(0,F,F).
+restar_comodines(A,F,R):-
+	A>0,
+	nth1(_,F,'$',I),
+	B is A-1,
+	restar_comodines(B,I,R).
 
 
 eliminar_si_posible(Lista, Sub, Resultado) :-
     foldl(eliminar_si_existe, Sub, Lista, Resultado).
 
 eliminar_si_existe(Elem, Lista, Resultado) :-
-    ( select(Elem, Lista, Resultado) -> true
-    ; Resultado = Lista ).
+    ( select(Elem, Lista, Resultado) -> true; 
+	Resultado = Lista ).
+
+
+% contar_apariciones(E,L,C)
+% C guarda la cantidad de apariciones de E en L
+contar_apariciones(_,[],0).
+contar_apariciones(E,[E|R],C):-
+    contar_apariciones(E,R,C2),
+    C is C2 + 1, !.
+contar_apariciones(E,[_|R],C):-
+    contar_apariciones(E,R,C).
 
 
 %letras_en_tablero(+O,+F,+C,+L,?R)

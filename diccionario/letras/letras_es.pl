@@ -33,4 +33,4 @@
 
 :-assertz(char_puntos_apariciones(z,10,1)).
 
-:-assertz(char_puntos_apariciones(' ',0,2)).
+:-assertz(char_puntos_apariciones('$',0,2)).
