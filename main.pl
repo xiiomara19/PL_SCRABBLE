@@ -4,6 +4,7 @@
 :- consult('configuracion.pl').					% Cargar la configuración del juego
 :- consult('tablero.pl').						% Cargar el tablero de juego
 :- consult('palabra.pl').						% Carga los predicados encargados de comprobar las palabras
+:- consult('ordenador.pl').						% Cargar los predicados encargados de gestionar los jugadores
 
 :-	dynamic
 			puntuacion/2,           	% Guarda la puntuación asociada con cada jugador
@@ -23,7 +24,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARTIDA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % iniciar_partida(+J) (modo persona vs ordenador) da inicio a una nueva partida del jugador J con la configuración actual. Si ya había una partida iniciada, 
 % entonces la llamada termina en error.
-
 iniciar_partida(_):- empezado(1), !, throw('Ya hay una partida iniciada').
 iniciar_partida(_):- modo(pvp), !, throw('Modo de juego incorrecto, se esperaba pve').
 iniciar_partida(player):- 
@@ -60,6 +60,25 @@ iniciar_partida(player_1, player_2):-
 	asserta(puntuacion(player_1 , 0)), asserta(puntuacion(player_2, 0)),		% Inicializamos la puntuación del jgador 1 y el jugador 2 a 0
 	retractall(empezado(_)), asserta(empezado(1)),								% Iniciamos la partida
 	mostrar_fichas(player_1), mostrar_fichas(player_2).							% Mostramos las fichas de ambos jugadores		
+
+
+% jugar_jugador(+O,+F,+C,+P)
+% tiene éxito si es un jugador y es su turno. Se realizarán las validaciones de la palabra introducida y se mostrarán en el tablero. 
+% Si el jugador no es el jugador 1, entonces la llamada termina en error.
+jugar_jugador(_,_,_,_):- 
+	siguiente_ronda(J), \+member(J,[player, player_1, player_2]), throw('No es el turno de este jugador').	% Comprobamos que el jugador 1 tiene el turno
+jugar_jugador(O,F,C,P):- 
+	siguiente_ronda(J), member(J,[player,player_1, player_2]),	
+	formar_palabra(J,O,F,C,P),
+	fichas_jugador(J,Fichas),
+	length(Fichas,N),
+	Rest is 7-N,
+	asignar_fichas(J,Rest),
+	pasar_turno(J),
+	(
+		%modo(pve) -> jugar_ordenador;		% Si el modo de juego es pve, se pasa el turno a la máquina
+		true	
+	).
 
 % Si hay una partida iniciada, abandonar_partida(+J) da la partida por perdida para el jugador J. Si no hay ninguna partida iniciada o bien el jugador J 
 % no está jugando, entonces la llamada termina en error.
@@ -102,6 +121,20 @@ otro_jugador(player, ordenador):- !.
 otro_jugador(ordenador, player):- !.
 otro_jugador(_, _):- throw('El jugador no es válido').
 
+% acabar_partida
+% Si hay una partida iniciada, acabar_partida da la partida por finalizada y muestra el jugador que ha ganado.
+% Si no hay una partida iniciada, entonces la llamada termina en error.
+acabar_partida():-
+	empieza(0), !, throw('No hay ninguna partida iniciada').
+
+acabar_partida():-
+	puntuacion(_,P1),
+	puntuacion(_,P2),
+	PM is min(P1,P2),
+	puntuacion(JM,PM),
+	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(JM)),
+	abandonar_partida(JM).
+
 % pasar_turno(+J)
 % Si hay una partida iniciada y es el turno del jugador  J,  pasar_turno(+J)  pasa el turno al siguiente jugador. Si no hay una partida iniciada o bien no es 
 % el turno del jugador J, entonces la llamada finaliza en error.
@@ -123,6 +156,7 @@ pasar_turno(J):-
 			retractall(siguiente_ronda(_)), asserta(siguiente_ronda(ordenador)),									% Comprobamos que el modo de juego es pve y pasamos el turno a la máquina
 			writeln('Ahora es el turno del ordenador')																% Mostramos el turno del siguiente jugador
 	).
+
 
 % asignar_fichas(+J,+F)
 % Si hay una partida iniciada y el jugador J acaba de formar una palabra o bien la partida acaba de iniciarse, asignar_fichas(+J,+F) entrega al jugador J las 
@@ -230,7 +264,6 @@ mostrar_fichas(J):-
 
 
 %  Si hay una partida iniciada, mostrar_puntuación muestra la puntuación de ambos jugadores. Si no hay una partida iniciada, entonces la llamada termina en error.
-
 mostrar_puntuacion:- empezado(0), throw('No hay ninguna partida iniciada').
 mostrar_puntuacion:- 
 	empezado(1),																% Comprobamos que hay una partida iniciada
@@ -244,7 +277,6 @@ mostrar_puntuacion:-
 %   a) Configuración de la partida.
 %   b) Resumen de las palabras formadas, los puntos obtenidos con cada una y las fichas disponibles en cada turno.
 % Si no hay una partida iniciada, entonces la llamada termina en error.
-
 ver_resumen:- empezado(0), throw('No hay ninguna partida iniciada').
 ver_resumen:- 
 	empezado(1),																													% Comprobamos que hay una partida iniciada
@@ -325,125 +357,3 @@ ver_ranking:-
 	nl, writeln('Puntuacion maxima y media ordenados:'),	% Segunda lista
 	forall(member(est(J, MAX, MED), RPuntuacion),
 		format('Jugador: ~w, Maxima: ~w, Media: ~2f~n', [J, MAX, MED])).
-
-
-% jugar_jugador(+O,+F,+C,+P)
-% tiene éxito si es un jugador y es su turno. Se realizarán las validaciones de la palabra introducida y se mostrarán en el tablero. 
-% Si el jugador no es el jugador 1, entonces la llamada termina en error.
-jugar_jugador(_,_,_,_):- 
-	siguiente_ronda(J), \+member(J,[player, player_1, player_2]), throw('No es el turno de este jugador').	% Comprobamos que el jugador 1 tiene el turno
-jugar_jugador(O,F,C,P):- 
-	siguiente_ronda(J), member(J,[player,player_1, player_2]),	
-	formar_palabra(J,O,F,C,P),
-	fichas_jugador(J,Fichas),
-	length(Fichas,N),
-	Rest is 7-N,
-	asignar_fichas(J,Rest),
-	pasar_turno(J),
-	(
-		%modo(pve) -> jugar_ordenador;		% Si el modo de juego es pve, se pasa el turno a la máquina
-		true	
-	).
-
-% jugar_ordenador tiene éxito si el jugador es la máquina y se le asigna el turno. Si el jugador no es la máquina, entonces la llamada termina en error.
-jugar_ordenador:- \+siguiente_ronda(ordenador),! ,throw('El jugador no es la máquina').
-jugar_ordenador:- 
-	siguiente_ronda(ordenador), 						% Si el jugador es la máquina, se le asigna el turno
-	tablero(B), 										% Se obtiene el tablero actual
-	fichas_jugador(ordenador, Fichas), 					% Se obtiene la lista de letras disponibles para la máquina
-	generar_palabra_aleatoria(Fichas, P), 		% Se genera una palabra aleatoria
-	obtener_posicion_aleatoria(P, B, Posicion), 	% Se obtiene una posición aleatoria en el tablero
-	formar_palabra(ordenador, h, Posicion, P),	% Se forma la palabra en el tablero
-	pasar_turno(ordenador).								% Se asigna el turno al jugador
-
-% generar_palabra_aleatoria(+Fichas,-P) 
-% tiene éxito si P es una palabra aleatoria formada por las letras de la lista Fichas. Si no hay letras disponibles, entonces la llamada termina en error.
-generar_palabra_aleatoria(Fichas, P):- 
-	setof(W, palabra_valida(Fichas, W), Palabras),  % obtiene todas las posibles
-    random_member(P, Palabras).
-
-% palabra_valida(+Fichas,-P)
-% tiene éxito si P es una palabra válida formada por las letras de la lista Fichas. Si no hay letras disponibles, entonces la llamada termina en error.
-palabra_valida(Fichas, P):- 
-	diccionario(P), 
-	atom_chars(P, LC),
-	es_valida(LC, Fichas).
-
-% es_valida(+L,+F)
-% tiene éxito si la lista de letras L puede formarse con las letras de la lista F. Si no hay letras disponibles, entonces la llamada termina en error.
-es_valida([], _):- !.	% Si la lista de letras está vacía, entonces es válida
-es_valida([H|T], F):- 
-	select(H, F, R),	% Se selecciona la letra H de la lista de letras F
-	(
-		H = '$' -> true;	% Si la letra es un dolar, entonces es válida
-		member(H, F) -> true;	% Si la letra está en la lista de letras, entonces es válida
-		throw('La letra no es válida')	% Si la letra no está en la lista de letras, entonces no es válida
-	),
-	es_valida(T, R).	% Se comprueba si el resto de letras son válidas
-
-
-
-
-% validar_palabra(+P) tiene éxito si Palabra es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
-validar_palabra(P):- var(P), !, throw('Debe especificar una palabra').
-validar_palabra(P):- 
-	diccionario(D), 
-	member(P, D), !.
-validar_palabra(_):- throw('La palabra no existe en el diccionario').
-
-
-acabar_partida():-
-	puntuacion(_,P1),
-	puntuacion(_,P2),
-
-	PM is min(P1,P2),
-
-	puntuacion(JM,PM),
-
-	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(JM)),	
-
-	abandonar_partida(JM).
-
-
-
-jugar_maquina([],Fichas_restantes):-
-	nth1(1,Fichas_restantes,E,Fichas_restantes2),
-	jugar_maquina([E],Fichas_restantes2),!.
-
-
-jugar_maquina(Fichas_uso, Fichas_restantes):-
-	findall(Perm, permutation(Fichas_uso, Perm), Permutaciones),
-	tablero(B),
-	member(Fila, B),
-    member(Elem, Fila),
-	celdas_posibles(L),
-    \+member(Elem,L),
-
-	añadir_a_cada_sublista(Elem,Permutaciones,R),
-	listas_a_atomos(R,R2),
-	writeln(R2),
-
-	between(0, 15, F),
-    between(0, 15, C),
-
-	(
-		intentar(once(include(formar_palabra(ordenador,v,F,C),R2,Resultado))),
-		\+intentar(once(include(formar_palabra(ordenador,v,F,C),R2,Resultado)))->
-		!,
-		nth1(1,Fichas_restantes,E,Fichas_restantes2),
-		append(Fichas_uso,[E],Fichas_uso2),
-		jugar_maquina(Fichas_uso2,Fichas_restantes2)
-	).
-
-
-intentar(Goal) :-
-    catch((call(Goal), !), _, fail), write('A').
-
-añadir_a_cada_sublista(Elem, ListaDeListas, Resultado) :-
-    maplist(agregar_elemento(Elem), ListaDeListas, Resultado).
-
-agregar_elemento(Elem, Sublista, NuevaSublista) :-
-    append(Sublista, [Elem], NuevaSublista).
-
-listas_a_atomos(Listas, Atomos) :-
-    maplist(atomic_list_concat, Listas, Atomos).

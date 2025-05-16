@@ -61,3 +61,12 @@ letras_validas([], _):- !.
 letras_validas([L|R], Bolsa) :-
     select(L,Bolsa, Resto),
     letras_validas(R, Resto).
+
+% validar_palabra(+P) tiene éxito si P es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
+validar_palabra(P):- var(P), !, throw('Debe especificar una palabra').
+validar_palabra(P):- 
+	diccionario(D), 
+	member(P, D), !.
+validar_palabra(_):- throw('La palabra no existe en el diccionario').
+
+
