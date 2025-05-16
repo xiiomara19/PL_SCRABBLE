@@ -139,7 +139,7 @@ asignar_fichas(_,F):- F>7, throw('El número de fichas no es válido').	% Compro
 asignar_fichas(J,F):- 
 	(
 		reparto(aleatorio) -> obtener_fichas(F, J, Fichas);						% Comprobamos que el modo de reparto es aleatorio y asignamos las fichas automáticamente
-		reparto(manual) -> pedir_fichas_manual(F, Fichas)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
+		reparto(manual) -> pedir_fichas_manual(F, J, Fichas)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
 	), 
 	retractall(fichas_jugador(J,_)), asserta(fichas_jugador(J,Fichas)),
 	mostrar_fichas(J),
@@ -157,15 +157,14 @@ asignar_fichas(J,F):-
 inicializar_fichas(J) :-
     (
 		reparto(aleatorio) -> obtener_fichas(7, J, Fichas);					% Comprobamos que el modo de reparto es aleatorio y asignamos las fichas automáticamente	
-		reparto(manual) -> pedir_fichas_manual(7, Fichas)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
+		reparto(manual) -> pedir_fichas_manual(7, J, Fichas)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
 	),
 	retractall(fichas_jugador(J,_)), asserta(fichas_jugador(J,Fichas)).
 
 % pedir_fichas_manual(+F,+Fichas)
 %  tiene éxito si pide al jugador J que elija las fichas que quiere. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
-pedir_fichas_manual(F, L):- 
+pedir_fichas_manual(F,J,L):- 
 	(
-		siguiente_ronda(J),
 		fichas_jugador(J, Fichas) -> true;									% Obtenemos las letras disponibles y las mezclamos aleatoriamente
 		Fichas = []
 	), 	
@@ -177,14 +176,12 @@ pedir_fichas_manual(F, L):-
     maplist(string_lower, LS, LString),
 	maplist(atom_string, LP, LString),
     length(LP, N),
-	writeln(LP),
     ( 
 		N =\= F -> throw('Número incorrecto de letras.'); 
 		\+letras_validas(LP,B) ->
         	throw('Has elegido letras que no están disponibles en la bolsa.'); 
 		true
     ),
-	writeln(LP),
 	maplist(actualizar_letra_usada, LP),										% Actualizamos la bolsa de letras	
 	append(Fichas, LP, L). 												% Obtenemos las letras al jugador.
 
@@ -233,7 +230,7 @@ mostrar_puntuacion:- empezado(0), throw('No hay ninguna partida iniciada').
 mostrar_puntuacion:- 
 	empezado(1),																% Comprobamos que hay una partida iniciada
 	(
-		modo(pvp) -> puntuacion(player, P1), puntuacion(ordenador, P2);			% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2 (la máquina)
+		modo(pve) -> puntuacion(player, P1), puntuacion(ordenador, P2);			% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2 (la máquina)
 		puntuacion(player_1, P1), puntuacion(player_2, P2)						% Comprobamos que el modo de juego es pvp y asignamos la puntuación del jugador 1 y el jugador 2
 	),
 	format('Puntuación del jugador 1: ~w~n', [P1]), format('Puntuación del jugador 2: ~w~n', [P2]). 	
