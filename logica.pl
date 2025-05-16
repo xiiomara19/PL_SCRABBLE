@@ -33,10 +33,7 @@ formar_palabra(J,O,F,C,P):-
 
 	escribir_final_ronda(P, Puntuacion_final, Fichas_restantes),
 
-    assertz(resumen_turno(J,P,Puntuacion_final,Fichas_restantes)),
-	length(Fichas_restantes,N),
-	Rest is 7-N,
-	asignar_fichas(J,Rest).
+    assertz(resumen_turno(J,P,Puntuacion_final,Fichas_restantes)).
 
 
 % escribir_final_ronda(+P,+Puntos,+F)
@@ -57,14 +54,12 @@ puede_escribir(O,F,C,L,Fichas,Fichas_restantes):-
 	letras_en_tablero(O,F,C,X,R),
 	eliminar_si_posible(L,R,I),
 	eliminar_si_posible(I,Fichas2,I2),
-	length(I2,A),
-	B is A - Comodines,
+	length(I2,A), write('Largura de A: '), writeln(A),
+	D is A-Comodines,
 	(
 		length(I,0)->throw('Hay que usar al menos una ficha de la bolsa');
-		B is 0 ->write('Fichas: '), writeln(Fichas),
-		write('I: '), writeln(I),
-		eliminar_si_posible(Fichas,I,Fichas3),write('resultdo: '),write(Fichas3),
-		restar_comodines(A,Fichas3,Fichas_restantes), write('comodines_restados');
+		D =< 0 -> eliminar_si_posible(Fichas,I,Fichas3),
+		restar_comodines(A,Fichas3,Fichas_restantes);
 		throw('No dispones de las fichas necesarias')
 	).
 
@@ -210,7 +205,7 @@ comprobar_si_encaja(J,v,F,C,[H|T],M,P,Puntuacion_final):-
 	M2 is M*Mul_palabra,
 	comprobar_si_encaja(J,v,X,C,T,M2,P3,Puntuacion_final).
 
-comprobar_si_encaja(_,_,_,_,_,_,_,_):- throw('La palabra no encaja con las fichas que hay en el tablero').
+comprobar_si_encaja(_,_,_,_,L,_,_,_):- writeln(L),throw('La palabra no encaja con las fichas que hay en el tablero').
 
 
 % multiplicador_letra(?C,?V)
@@ -228,3 +223,4 @@ multiplicador_palabra(_,1).
 % celdas_posibles(-L)
 % devuelve una lista de las celdas que se encuentran en el tablero por defecto
 celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
+
