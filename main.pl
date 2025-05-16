@@ -199,8 +199,8 @@ inicializar_fichas(J) :-
 	),
 	retractall(fichas_jugador(J,_)), asserta(fichas_jugador(J,Fichas)).
 
-% pedir_fichas_manual(+F,+Fichas)
-%  tiene éxito si pide al jugador J que elija las fichas que quiere. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
+% pedir_fichas_manual(+F,+J,+L)
+% tiene éxito si L es una lista de F letras + las fichas actuales que el jugador J ha elegido manualmente. 
 pedir_fichas_manual(F,J,L):- 
 	(
 		fichas_jugador(J, Fichas) -> true;									% Obtenemos las letras disponibles y las mezclamos aleatoriamente

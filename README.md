@@ -19,13 +19,14 @@
 
 - [x] iniciar_partida(+J)
 - [x] iniciar_partida(+J1,+J2)
+- [x] jugar_jugador(+O,+F,+C,+P)
 - [x] abandonar_partida(+J)
 - [x] otro_jugador(+J,+O)
+- [x] acabar_partida
 - [x] pasar_turno(+J)
 - [x] asignar_fichas(+J,+F)
-- [x] asignar_fichas_auto(+J,+F)
-- [x] asignar_fichas_manual(+J,+F)
 - [x] inicializar_fichas(+J)
+- [x] pedir_fichas_manual(+F,+J,+L)
 - [x] obtener_fichas(+F,+J,-L)
 - [x] mostrar_fichas(+J)
 - [x] mostrar_puntuación
@@ -33,11 +34,6 @@
 - [x] ver_historial(+J)
 - [x] mean_list(+L,-M)
 - [x] ver_ranking
-- [ ] jugar_A
-- [ ] jugar_B
-- [ ] jugar_maquina
-- [x] validar_palabra(+P)
-- [ ] validar_fichas_palabra
 
 ### configuracion.pl
 
@@ -52,6 +48,7 @@
 - [x] letra_repetida(-LR)
 - [x] actualizar_letra_usada(+L)
 - [x] letras_validas(+L,+B)
+- [x] validar_palabra(+P)
 
 ### tablero.pl
 
@@ -89,4 +86,4 @@
 - Reordenar proyecto
 - Añadir mensajes de error
 - Hacer retract de todo al finalizar
-- Jueguen los jugadores (play_A, play_B, play_maquina)
+- Jugar maquina
