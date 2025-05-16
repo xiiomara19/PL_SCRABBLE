@@ -282,20 +282,57 @@ ver_ranking:-
 		format('Jugador: ~w, Maxima: ~w, Media: ~2f~n', [J, MAX, MED])).
 
 
-% jugar_A
+% jugar_jugador(+O,+F,+C,+P)
+% tiene éxito si es un jugador y es su turno. Se realizarán las validaciones de la palabra introducida y se mostrarán en el tablero. 
+% Si el jugador no es el jugador 1, entonces la llamada termina en error.
+jugar_jugador(_,_,_,_):- 
+	siguiente_ronda(J), \+member(J,[player, player_1, player_2]), throw('No es el turno de este jugador').	% Comprobamos que el jugador 1 tiene el turno
+jugar_jugador(O,F,C,P):- 
+	siguiente_ronda(J), member(J,[player,player_1, player_2]),
+	formar_palabra(J,O,F,C,P),
+	pasar_turno(J),
+	(
+		modo(pve) -> jugar_ordenador;		% Si el modo de juego es pve, se pasa el turno a la máquina
+		true	
+	).
 
-% jugar_B
 % jugar_ordenador tiene éxito si el jugador es la máquina y se le asigna el turno. Si el jugador no es la máquina, entonces la llamada termina en error.
+jugar_ordenador:- \+siguiente_ronda(ordenador),! ,throw('El jugador no es la máquina').
 jugar_ordenador:- 
-	siguiente_ronda(ordenador), 							% Si el jugador es la máquina, se le asigna el turno
+	siguiente_ronda(ordenador), 						% Si el jugador es la máquina, se le asigna el turno
 	tablero(B), 										% Se obtiene el tablero actual
 	fichas_jugador(ordenador, Fichas), 					% Se obtiene la lista de letras disponibles para la máquina
-	generar_palabra_aleatoria(Fichas, Palabra), 		% Se genera una palabra aleatoria
-	obtener_posicion_aleatoria(Palabra, B, Posicion), 	% Se obtiene una posición aleatoria en el tablero
-	formar_palabra(ordenador, h, Posicion, Palabra),		% Se forma la palabra en el tablero
-	siguiente_ronda(jugador).							% Se asigna el turno al jugador
+	generar_palabra_aleatoria(Fichas, P), 		% Se genera una palabra aleatoria
+	obtener_posicion_aleatoria(P, B, Posicion), 	% Se obtiene una posición aleatoria en el tablero
+	formar_palabra(ordenador, h, Posicion, P),	% Se forma la palabra en el tablero
+	pasar_turno(ordenador).								% Se asigna el turno al jugador
 
-jugar_ordenador:- throw('El jugador no es la máquina').
+% generar_palabra_aleatoria(+Fichas,-P) 
+% tiene éxito si P es una palabra aleatoria formada por las letras de la lista Fichas. Si no hay letras disponibles, entonces la llamada termina en error.
+generar_palabra_aleatoria(Fichas, P):- 
+	setof(W, palabra_valida(Fichas, W), Palabras),  % obtiene todas las posibles
+    random_member(P, Palabras).
+
+% palabra_valida(+Fichas,-P)
+% tiene éxito si P es una palabra válida formada por las letras de la lista Fichas. Si no hay letras disponibles, entonces la llamada termina en error.
+palabra_valida(Fichas, P):- 
+	diccionario(P), 
+	atom_chars(P, LC),
+	es_valida(LC, Fichas).
+
+% es_valida(+L,+F)
+% tiene éxito si la lista de letras L puede formarse con las letras de la lista F. Si no hay letras disponibles, entonces la llamada termina en error.
+es_valida([], _):- !.	% Si la lista de letras está vacía, entonces es válida
+es_valida([H|T], F):- 
+	select(H, F, R),	% Se selecciona la letra H de la lista de letras F
+	(
+		H = ' ' -> true;	% Si la letra es un espacio, entonces es válida
+		member(H, F) -> true;	% Si la letra está en la lista de letras, entonces es válida
+		throw('La letra no es válida')	% Si la letra no está en la lista de letras, entonces no es válida
+	),
+	es_valida(T, R).	% Se comprueba si el resto de letras son válidas
+
+
 
 
 % validar_palabra(+P) tiene éxito si Palabra es una palabra válida en el idioma actual. Si la palabra no es válida, la llamada termina en error.
@@ -306,3 +343,36 @@ validar_palabra(P):-
 validar_palabra(_):- throw('La palabra no existe en el diccionario').
 
 % validar_fichas_palabra (tiene las fichas necesarias para formar la palabra)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+puede_formarse_con_comodin([], _).
+puede_formarse_con_comodin([L|Resto], LetrasDisponibles) :-
+    (   select(L, LetrasDisponibles, RestoLetras)
+    ->  true
+    ;   select('_', LetrasDisponibles, RestoLetras)  % Usa un comodín si la letra no está
+    ),
+    puede_formarse_con_comodin(Resto, RestoLetras).
+
+palabra_formable(LetrasDisponibles, Palabra) :-
+    diccionario(Palabra),
+    atom_chars(Palabra, LetrasPalabra),
+    puede_formarse_con_comodin(LetrasPalabra, LetrasDisponibles).
+
+palabra_valida_aleatoria(Letras, Palabra) :-
+    setof(P, palabra_formable(Letras, P), Palabras),
+    random_member(Palabra, Palabras).
