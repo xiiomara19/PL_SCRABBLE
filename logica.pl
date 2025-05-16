@@ -14,7 +14,6 @@ formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada'
 formar_palabra(J,O,F,C,P):- 
     validar_palabra(P),
 	empezado(1),
-	%siguiente_ronda(J),
     fichas_jugador(J,Fichas),
 	atom_chars(P,L),
 	length(L,X),
@@ -41,7 +40,7 @@ formar_palabra(J,O,F,C,P):-
 escribir_final_ronda(P,Puntos,F):-
 	write('Palabra formada: '), writeln(P),
     write('Puntuacion obtenida: '), writeln(Puntos),
-    write('Fichas disponibles: '), writeln(F).
+    write('Fichas disponibles: '), writeln(F),nl,nl.
 
 
 % puede_escribir(+O,+F,+C,+L,+Fichas,-Fichas_restantes)
@@ -54,7 +53,7 @@ puede_escribir(O,F,C,L,Fichas,Fichas_restantes):-
 	letras_en_tablero(O,F,C,X,R),
 	eliminar_si_posible(L,R,I),
 	eliminar_si_posible(I,Fichas2,I2),
-	length(I2,A), write('Largura de A: '), writeln(A),
+	length(I2,A),
 	D is A-Comodines,
 	(
 		length(I,0)->throw('Hay que usar al menos una ficha de la bolsa');
@@ -181,7 +180,8 @@ comprobar_si_encaja(J,v,F,C,[H|T],M,P,Puntuacion_final):-
 
 % Si es una celda vacia comprobar los multiplicadores de dicha celda y seguir con el resto de la palabra
 comprobar_si_encaja(J,h,F,C,[H|T],M,P,Puntuacion_final):- 
-	get_cell(F,C,Z), 
+	get_cell(F,C,Z),
+	Z \= H, 
 	celdas_posibles(L), 
 	member(Z,L),
 	char_puntos_apariciones(H,Puntos,_),
@@ -194,6 +194,7 @@ comprobar_si_encaja(J,h,F,C,[H|T],M,P,Puntuacion_final):-
 	comprobar_si_encaja(J,h,F,X,T,M2,P3,Puntuacion_final).
 comprobar_si_encaja(J,v,F,C,[H|T],M,P,Puntuacion_final):- 
 	get_cell(F,C,Z),
+	Z \= H,
 	celdas_posibles(L), 
 	member(Z,L), 
 	char_puntos_apariciones(H,Puntos,_),
@@ -223,4 +224,64 @@ multiplicador_palabra(_,1).
 % celdas_posibles(-L)
 % devuelve una lista de las celdas que se encuentran en el tablero por defecto
 celdas_posibles([' --- ', ' DL  ', ' TL  ', ' DP  ', ' TP  ', '  *  ']).
+
+
+acabar_partida():-
+	puntuacion(_,P1),
+	puntuacion(_,P2),
+
+	PM is min(P1,P2),
+
+	puntuacion(JM,PM),
+
+	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(JM)),	
+
+	abandonar_partida(JM).
+
+
+
+jugar_maquina([],Fichas_restantes):-
+	nth1(1,Fichas_restantes,E,Fichas_restantes2),
+	jugar_maquina([E],Fichas_restantes2),!.
+
+
+jugar_maquina(Fichas_uso, Fichas_restantes):-
+	findall(Perm, permutation(Fichas_uso, Perm), Permutaciones),
+	tablero(B),
+	member(Fila, B),
+    member(Elem, Fila),
+	celdas_posibles(L),
+    \+member(Elem,L),
+
+	añadir_a_cada_sublista(Elem,Permutaciones,R),
+	listas_a_atomos(R,R2),
+	writeln(R2),
+
+	between(0, 15, F),
+    between(0, 15, C),
+
+	(
+		intentar(once(include(formar_palabra(ordenador,v,F,C),R2,Resultado))),
+		\+intentar(once(include(formar_palabra(ordenador,v,F,C),R2,Resultado)))->
+		!,
+		nth1(1,Fichas_restantes,E,Fichas_restantes2),
+		append(Fichas_uso,[E],Fichas_uso2),
+		jugar_maquina(Fichas_uso2,Fichas_restantes2)
+	).
+
+
+intentar(Goal) :-
+    catch((call(Goal), !), _, fail), write('A').
+
+añadir_a_cada_sublista(Elem, ListaDeListas, Resultado) :-
+    maplist(agregar_elemento(Elem), ListaDeListas, Resultado).
+
+agregar_elemento(Elem, Sublista, NuevaSublista) :-
+    append(Sublista, [Elem], NuevaSublista).
+
+listas_a_atomos(Listas, Atomos) :-
+    maplist(atomic_list_concat, Listas, Atomos).
+
+
+
 

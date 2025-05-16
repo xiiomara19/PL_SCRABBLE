@@ -6,7 +6,7 @@
 
 % Opciones de configuración iniciales
 :- assertz(idioma(es)).					% Idioma por defecto: EspaÑol
-:- assertz(modo(pve)).	            	% Modo de juego por defecto: pve
+:- assertz(modo(pvp)).	            	% Modo de juego por defecto: pve
 :- assertz(reparto(aleatorio)).	    	% Modo en el que se reparten las fichas por defecto: aleatorio
 :- assertz(empieza(0)).		    		% Modo de inicio de partida: normal
 
