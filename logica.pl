@@ -11,8 +11,6 @@
 
 formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada').
 %formar_palabra(J,_,_,_,_):- siguiente_ronda(P), P=\=J, throw('No es el turno del jugador J').
-%formar_palabra(_,_,_,_,P):- 
-%	\+validar_palabra_fichas(P), throw('No dispone de las fichas necesarias para formar la palabra').
 formar_palabra(J,O,F,C,P):- 
     validar_palabra(P),
 	empezado(1),
@@ -20,28 +18,49 @@ formar_palabra(J,O,F,C,P):-
     fichas_jugador(J,Fichas),
 	atom_chars(P,L),
 	length(L,X),
-    usa_letra(O,F,C,L), 
 	(
 		O = h -> comprobar_limites(C,X), comprobar_limites(F,0);
 		O = v -> comprobar_limites(C,0), comprobar_limites(F,X)
 	),
-    letras_en_tablero(O,F,C,X,R),
-    eliminar_si_posible(L,R,I),
-    eliminar_si_posible(I,Fichas,I2), 
-    length(I2,0),
-    eliminar_si_posible(Fichas,I,Fichas_restantes),
+	usa_letra(O,F,C,L),
+    puede_escribir(O,F,C,L,Fichas,Fichas_restantes),
 	comprobar_si_encaja(J,O,F,C,L,1,0,Puntuacion_final), 
+
 	retractall(fichas_jugador(J,_)),
 	asserta(fichas_jugador(J,Fichas_restantes)),
 	actualizar_tablero(O,F,C,L),
 	mostrar_tablero,
-    write('Palabra formada: '), writeln(P),
-    write('Puntuacion obtenida: '), writeln(Puntuacion_final),
-    write('Fichas disponibles: '), writeln(Fichas_restantes),
+
+	escribir_final_ronda(P, Puntuacion_final, Fichas_restantes),
+
     assertz(resumen_turno(J,P,Puntuacion_final,Fichas_restantes)),
 	length(Fichas_restantes,N),
 	Rest is 7-N,
 	asignar_fichas(J,Rest).
+
+
+% escribir_final_ronda(+P,+Puntos,+F)
+% Escribe los parametros (Palabra, Puntos obtenidos, Fichas Restantes)
+escribir_final_ronda(P,Puntos,F):-
+	write('Palabra formada: '), writeln(P),
+    write('Puntuacion obtenida: '), writeln(Puntos),
+    write('Fichas disponibles: '), writeln(F).
+
+
+% puede_escribir(+O,+F,+C,+L,+Fichas,-Fichas_restantes)
+% comprueba si el jugador dispone de las fichas necesarias para escribir la plabra L en la posicion indicada en (F,C)
+% y devuelve las fichas que no se utilizan
+puede_escribir(O,F,C,L,Fichas,Fichas_restantes):-
+	length(L,X),
+	Fichas2 = Fichas,
+	letras_en_tablero(O,F,C,X,R),
+	eliminar_si_posible(L,R,I),
+	eliminar_si_posible(I,Fichas2,I2), 
+	(
+		length(I,0)->throw('Hay que usar al menos una ficha de la bolsa');
+		length(I2,0)-> eliminar_si_posible(Fichas2,I,Fichas_restantes);
+		throw('No dispones de las fichas necesarias')
+	).
 
 
 eliminar_si_posible(Lista, Sub, Resultado) :-
@@ -111,9 +130,11 @@ usa_letra(v,F,C,[H|T]):-
 		get_cell(F,C,'  *  ') -> true;
 		X is F+1, usa_letra(v,X,C,T)
 	).
+usa_letra(_,_,_,[]):- throw('Tienes que usar una letra del tablero').
 
 % comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
-comprobar_limites(P, L):- P >= 0, A is P+L, A<16.
+comprobar_limites(P,L):- P >= 0, A is P+L, A<16,!.
+comprobar_limites(_,_):- throw('Supera los limites del tablero').
 
 % comprobar_si_encaja(+J,+O,+F,+C,+L,+M,+P) comprueba si la palabra L encaja en el tablero B en la posicion (F,C) y devuelve la puntuacion obtenida en P,
 % se le suman los puntos al posicionar cada letra, en M guarda el multiplicador de la palabra
@@ -163,6 +184,8 @@ comprobar_si_encaja(J,v,F,C,[H|T],M,P,Puntuacion_final):-
 	X is F+1, 
 	M2 is M*Mul_palabra,
 	comprobar_si_encaja(J,v,X,C,T,M2,P3,Puntuacion_final).
+
+comprobar_si_encaja(_,_,_,_,_,_,_,_):- throw('La palabra no encaja con las fichas que hay en el tablero').
 
 
 % multiplicador_letra(?C,?V)
