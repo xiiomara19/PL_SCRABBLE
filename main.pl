@@ -133,10 +133,25 @@ asignar_fichas(_,0):- write('El jugador no necesita fichas'), !.		% Si el jugado
 asignar_fichas(_,F):- F>7, throw('El número de fichas no es válido').	% Comprobamos que el número de fichas es válido
 
 asignar_fichas(J,F):- 
+	(
+		reparto(aleatorio) -> asignar_fichas_auto(J,F);						% Comprobamos que el modo de reparto es aleatorio y asignamos las fichas automáticamente
+		reparto(manual) -> asignar_fichas_manual(J,F)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
+	), mostrar_fichas(J),
+	(
+		F=[] -> abandonar_partida(J);										% Si no quedan más fichas, el jugador pierde
+		true
+	).
+% asignar_fichas_manual(+J,+F)
+%  tiene éxito si asigna las fichas necesarias al jugador J de forma automatica. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
+asignar_fichas_auto(J,F):-
 	obtener_fichas(F, J, Fichas), 								% Obtenemos las fichas que le faltan al jugador
 	retractall(fichas_jugador(J, _)), 							% Retractamos las fichas del jugador
-	asserta(fichas_jugador(J, Fichas)),							% Asignamos las fichas al jugador
-	mostrar_fichas(J).
+	asserta(fichas_jugador(J, Fichas)).							% Asignamos las fichas al jugador
+
+% asignar_fichas_manual(+J,+F)
+%  tiene éxito si asigna las fichas necesarias al jugador J de forma manual. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
+asignar_fichas_manual(J,F):-
+	true.
 
 % inicializar_fichas(+J) tiene éxito si inicializa las fichas del jugador J a 7 letras aleatorias.
 inicializar_fichas(J) :-
@@ -199,7 +214,6 @@ mostrar_puntuacion:-
 %   b) Resumen de las palabras formadas, los puntos obtenidos con cada una y las fichas disponibles en cada turno.
 % Si no hay una partida iniciada, entonces la llamada termina en error.
 
-%TO-DO: Apartado B!! Resumen de las palabras formadas, los puntos obtenidos con cada una y las fichas disponibles en cada turno.
 ver_resumen:- empezado(0), throw('No hay ninguna partida iniciada').
 ver_resumen:- 
 	empezado(1),																													% Comprobamos que hay una partida iniciada
@@ -288,11 +302,15 @@ ver_ranking:-
 jugar_jugador(_,_,_,_):- 
 	siguiente_ronda(J), \+member(J,[player, player_1, player_2]), throw('No es el turno de este jugador').	% Comprobamos que el jugador 1 tiene el turno
 jugar_jugador(O,F,C,P):- 
-	siguiente_ronda(J), member(J,[player,player_1, player_2]),
+	siguiente_ronda(J), member(J,[player,player_1, player_2]),	
 	formar_palabra(J,O,F,C,P),
+	fichas_jugador(J,Fichas),
+	length(Fichas,N),
+	Rest is 7-N,
+	asignar_fichas(J,Rest),
 	pasar_turno(J),
 	(
-		modo(pve) -> jugar_ordenador;		% Si el modo de juego es pve, se pasa el turno a la máquina
+		%modo(pve) -> jugar_ordenador;		% Si el modo de juego es pve, se pasa el turno a la máquina
 		true	
 	).
 
@@ -326,7 +344,7 @@ es_valida([], _):- !.	% Si la lista de letras está vacía, entonces es válida
 es_valida([H|T], F):- 
 	select(H, F, R),	% Se selecciona la letra H de la lista de letras F
 	(
-		H = ' ' -> true;	% Si la letra es un espacio, entonces es válida
+		H = '$' -> true;	% Si la letra es un dolar, entonces es válida
 		member(H, F) -> true;	% Si la letra está en la lista de letras, entonces es válida
 		throw('La letra no es válida')	% Si la letra no está en la lista de letras, entonces no es válida
 	),

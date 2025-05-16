@@ -23,6 +23,8 @@
 - [x] otro_jugador(+J,+O)
 - [x] pasar_turno(+J)
 - [x] asignar_fichas(+J,+F)
+- [x] asignar_fichas_auto(+J,+F)
+- [x] asignar_fichas_manual(+J,+F)
 - [x] inicializar_fichas(+J)
 - [x] obtener_fichas(+F,+J,-L)
 - [x] mostrar_fichas(+J)
