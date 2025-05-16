@@ -1,3 +1,10 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ALERTA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% El apartado de "jugar_ordenador" y "jugar_maquina" no se encuentra terminado y no funciona.
+
+
 % jugar_ordenador tiene éxito si el jugador es la máquina y se le asigna el turno. Si el jugador no es la máquina, entonces la llamada termina en error.
 jugar_ordenador:- \+siguiente_ronda(ordenador),! ,throw('El jugador no es la máquina').
 jugar_ordenador:- 
