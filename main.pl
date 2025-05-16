@@ -3,7 +3,7 @@
 :- consult('diccionario.pl').					% Cargar el diccionario de palabras
 :- consult('configuracion.pl').					% Cargar la configuración del juego
 :- consult('tablero.pl').						% Cargar el tablero de juego
-:- consult('logica.pl').						% Carga los predicados encargados de la logica interna del juego
+:- consult('palabra.pl').						% Carga los predicados encargados de comprobar las palabras
 
 :-	dynamic
 			puntuacion/2,           	% Guarda la puntuación asociada con cada jugador
@@ -390,3 +390,60 @@ validar_palabra(P):-
 	diccionario(D), 
 	member(P, D), !.
 validar_palabra(_):- throw('La palabra no existe en el diccionario').
+
+
+acabar_partida():-
+	puntuacion(_,P1),
+	puntuacion(_,P2),
+
+	PM is min(P1,P2),
+
+	puntuacion(JM,PM),
+
+	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(JM)),	
+
+	abandonar_partida(JM).
+
+
+
+jugar_maquina([],Fichas_restantes):-
+	nth1(1,Fichas_restantes,E,Fichas_restantes2),
+	jugar_maquina([E],Fichas_restantes2),!.
+
+
+jugar_maquina(Fichas_uso, Fichas_restantes):-
+	findall(Perm, permutation(Fichas_uso, Perm), Permutaciones),
+	tablero(B),
+	member(Fila, B),
+    member(Elem, Fila),
+	celdas_posibles(L),
+    \+member(Elem,L),
+
+	añadir_a_cada_sublista(Elem,Permutaciones,R),
+	listas_a_atomos(R,R2),
+	writeln(R2),
+
+	between(0, 15, F),
+    between(0, 15, C),
+
+	(
+		intentar(once(include(formar_palabra(ordenador,v,F,C),R2,Resultado))),
+		\+intentar(once(include(formar_palabra(ordenador,v,F,C),R2,Resultado)))->
+		!,
+		nth1(1,Fichas_restantes,E,Fichas_restantes2),
+		append(Fichas_uso,[E],Fichas_uso2),
+		jugar_maquina(Fichas_uso2,Fichas_restantes2)
+	).
+
+
+intentar(Goal) :-
+    catch((call(Goal), !), _, fail), write('A').
+
+añadir_a_cada_sublista(Elem, ListaDeListas, Resultado) :-
+    maplist(agregar_elemento(Elem), ListaDeListas, Resultado).
+
+agregar_elemento(Elem, Sublista, NuevaSublista) :-
+    append(Sublista, [Elem], NuevaSublista).
+
+listas_a_atomos(Listas, Atomos) :-
+    maplist(atomic_list_concat, Listas, Atomos).
