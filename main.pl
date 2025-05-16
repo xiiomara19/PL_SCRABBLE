@@ -148,7 +148,7 @@ asignar_fichas(J,F):-
 			puntuacion(J,P1), otro_jugador(J,J2), puntuacion(J2,P2),
 			(																					% Si no quedan más fichas, el jugador pierde
 				P1<P2 -> abandonar_partida(J);
-				P1>P2 -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(J2)), abandonar_partida(J2);
+				P1>P2, retractall(siguiente_ronda(_)), asserta(siguiente_ronda(J2)), abandonar_partida(J2)
 			);												
 		true
 	).
@@ -163,23 +163,30 @@ inicializar_fichas(J) :-
 
 % pedir_fichas_manual(+F,+Fichas)
 %  tiene éxito si pide al jugador J que elija las fichas que quiere. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
-pedir_fichas_manual(F, Fichas):- 
+pedir_fichas_manual(F, L):- 
+	(
+		siguiente_ronda(J),
+		fichas_jugador(J, Fichas) -> true;									% Obtenemos las letras disponibles y las mezclamos aleatoriamente
+		Fichas = []
+	), 	
 	bolsa_letras(B),
     format('Fichas disponibles en la bolsa: ~w~n', [B]),
 	format('Selecciona ~w letras separadas por comas (por ejemplo: a,b,c,...):~n', [F]),
     read_line_to_string(user_input, Input),
     split_string(Input, ",", " ", LS),
-    maplist(string_lower, LS, LL),
-    length(LL, N),
-	writeln(LL),
+    maplist(string_lower, LS, LString),
+	maplist(atom_string, LP, LString),
+    length(LP, N),
+	writeln(LP),
     ( 
 		N =\= F -> throw('Número incorrecto de letras.'); 
-		\+letras_validas(LL) ->
+		\+letras_validas(LP,B) ->
         	throw('Has elegido letras que no están disponibles en la bolsa.'); 
 		true
     ),
-    LL = Fichas,
-	maplist(actualizar_letra_usada, Fichas).
+	writeln(LP),
+	maplist(actualizar_letra_usada, LP),										% Actualizamos la bolsa de letras	
+	append(Fichas, LP, L). 												% Obtenemos las letras al jugador.
 
 
 % obtener_fichas(+F,+J,-L) 

@@ -58,7 +58,6 @@ actualizar_letra_usada(L) :-
 % letras_validas(+L,+B)
 % Comprueba si la lista de letras L se encuentra disponible en la bolsa de letras B.
 letras_validas([], _):- !.
-letras_validas([L|R]) :-
-    bolsa_letras(Bolsa),
-    select(L, Bolsa, Resto),
+letras_validas([L|R], Bolsa) :-
+    select(L,Bolsa, Resto),
     letras_validas(R, Resto).
