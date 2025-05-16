@@ -51,6 +51,7 @@
 - [x] bolsa_letras(-B)
 - [x] letra_repetida(-LR)
 - [x] actualizar_letra_usada(+L)
+- [x] letras_validas(+L,+B)
 
 ### tablero.pl
 
@@ -58,9 +59,9 @@
 - [x] crear_tablero_base(-B)
 - [x] celdas_especiales(-C)
 - [x] insertar_celdas_especiales(+C,+BoardIn,-BoardOut)
-- [ ] set_cell(+F,+C,+V,+BoardIn,-BoardOut)
-- [ ] reemplazar_celda(+C,+RowIn,+NewValue,-RowOut)
-- [ ] get_cell(+F,+C,+B,-R)
+- [x] set_cell(+F,+C,+V) 
+- [x] reemplazar_celda(+C,+RowIn,+NewValue,-RowOut)
+- [x] get_cell(+F,+C,+B,-R)
 - [x] mostrar_tablero
 - [x] mostrar_fila (+S,+R)
 - [x] mostrar_item(+C)
