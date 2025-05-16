@@ -94,6 +94,28 @@ otro_jugador(player, ordenador):- !.
 otro_jugador(ordenador, player):- !.
 otro_jugador(_, _):- throw('El jugador no es válido').
 
+% pasar_turno(+J)
+% Si hay una partida iniciada y es el turno del jugador  J,  pasar_turno(+J)  pasa el turno al siguiente jugador. Si no hay una partida iniciada o bien no es 
+% el turno del jugador J, entonces la llamada finaliza en error.
+pasar_turno(_):- empezado(0), !, throw('No hay ninguna partida iniciada').
+pasar_turno(J):-
+	(
+		modo(pvp), \+siguiente_ronda(J) -> throw('El jugador no es válido. No es el turo de ese jugador');		% Comprobamos que el modo de juego es pvp y el jugador es válido
+		modo(pve), \+siguiente_ronda(J), throw('El jugador no es válido. No es el turo de ese jugador')		% Comprobamos que el modo de juego es pve y el jugador es válido
+	), !.
+pasar_turno(J):- 
+	empezado(1),
+	siguiente_ronda(J),		
+	(
+		modo(pvp) -> 
+			otro_jugador(J, Siguiente), 
+			retractall(siguiente_ronda(_)), asserta(siguiente_ronda(Siguiente)),									% Comprobamos que el modo de juego es pvp y pasamos el turno al siguiente jugador
+			format('Ahora es el turno del jugador ~w~n',[Siguiente]);												% Mostramos el turno del siguiente jugador
+		modo(pve) -> 
+			retractall(siguiente_ronda(_)), asserta(siguiente_ronda(ordenador)),									% Comprobamos que el modo de juego es pve y pasamos el turno a la máquina
+			writeln('Ahora es el turno del ordenador')																% Mostramos el turno del siguiente jugador
+	).
+
 % asignar_fichas(+J,+F)
 % Si hay una partida iniciada y el jugador J acaba de formar una palabra o bien la partida acaba de iniciarse, asignar_fichas(+J,+F) entrega al jugador J las 
 % fichas F. En el caso del modo de juego persona vs máquina, el jugador máquina será identificado mediante ‘ordenador’. Si no hay una partida iniciada, el 
@@ -101,11 +123,11 @@ otro_jugador(_, _):- throw('El jugador no es válido').
 % número de fichas que le faltan al jugador J (a excepción de que las fichas que falten por repartir sean menos de las que necesita el jugador J), entonces la 
 % llamada finaliza en error.
 
-asignar_fichas(_,_):- empezado(0), throw('No hay ninguna partida iniciada').
+asignar_fichas(_,_):- empezado(0), !, throw('No hay ninguna partida iniciada').
 asignar_fichas(J,_):- 
 	(
-		modo(pvp), \+siguiente_ronda(J) -> throw('El jugador no es válido');	% Comprobamos que el modo de juego es pvp y el jugador es válido
-		modo(pve), \+siguiente_ronda(J) -> throw('El jugador no es válido')		% Comprobamos que el modo de juego es pve y el jugador es válido
+		modo(pvp), \+siguiente_ronda(J), ! -> throw('El jugador no es válido');	% Comprobamos que el modo de juego es pvp y el jugador es válido
+		modo(pve), \+siguiente_ronda(J), ! -> throw('El jugador no es válido')		% Comprobamos que el modo de juego es pve y el jugador es válido
 	).
 asignar_fichas(_,0):- write('El jugador no necesita fichas'), !.		% Si el jugador no necesita fichas, mostramos un mensaje
 asignar_fichas(_,F):- F>7, throw('El número de fichas no es válido').	% Comprobamos que el número de fichas es válido

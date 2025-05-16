@@ -21,25 +21,21 @@
 - [x] iniciar_partida(+J1,+J2)
 - [x] abandonar_partida(+J)
 - [x] otro_jugador(+J,+O)
-- [ ] usa_letra(O,F,C,B,L)
-- [ ] comprobar_limites(P, L)
-- [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
+- [x] pasar_turno(+J)
 - [x] asignar_fichas(+J,+F)
 - [x] inicializar_fichas(+J)
-- [ ] obtener_fichas(+F,+J,-L)
+- [x] obtener_fichas(+F,+J,-L)
 - [x] mostrar_fichas(+J)
 - [x] mostrar_puntuación
-- [ ] ver_resumen
+- [x] ver_resumen
 - [x] ver_historial(+J)
 - [x] mean_list(+L,-M)
-- [ ] ver_ranking
+- [x] ver_ranking
 - [ ] jugar_A
 - [ ] jugar_B
 - [ ] jugar_maquina
-- [ ] calcular_puntos
 - [x] validar_palabra(+P)
-- [ ] validar_fichas
-- [ ] validar_posicion
+- [ ] validar_fichas_palabra
 
 ### configuracion.pl
 
@@ -71,7 +67,13 @@
 ### logica.pl
 
 - [ ] formar_palabra(+J,+O,+F,+C,+P)
+- [ ] escribir_final_ronda(+P,+Puntos,+F)
+- [ ] puede_escribir(+O,+F,+C,+L,+Fichas,-Fichas_restantes)
+- [ ] eliminar_si_posible -> FALTA DESCRIPCIÓN
 - [x] letras_en_tablero(+O,+F,+C,+L,?R)
+- [ ] usa_letra(O,F,C,B,L)
+- [ ] comprobar_limites(P, L)
+- [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
 - [x] multiplicador_letra(?C,?V)
 - [x] multiplicador_palabra(?C,?V)
 - [x] celdas_posibles(-L)
@@ -83,7 +85,6 @@
 - Hacer retract de todo al finalizar
 - Jueguen los jugadores (play_A, play_B, play_maquina)
 - Ganar/perder
-- Ver_ranking
 - Comodines
 - Docu
 - añadir comentario en formar_palabra (reno)
