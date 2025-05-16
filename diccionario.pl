@@ -54,3 +54,11 @@ actualizar_letra_usada(L) :-
     retract(char_puntos_apariciones(L, P, C)),
     C1 is C - 1,
     ( C1 > 0 -> asserta(char_puntos_apariciones(L, P, C1)) ; true ).
+
+% letras_validas(+L,+B)
+% Comprueba si la lista de letras L se encuentra disponible en la bolsa de letras B.
+letras_validas([], _):- !.
+letras_validas([L|R]) :-
+    bolsa_letras(Bolsa),
+    select(L, Bolsa, Resto),
+    letras_validas(R, Resto).

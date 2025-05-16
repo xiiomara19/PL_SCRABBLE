@@ -27,17 +27,19 @@
 iniciar_partida(_):- empezado(1), !, throw('Ya hay una partida iniciada').
 iniciar_partida(_):- modo(pvp), !, throw('Modo de juego incorrecto, se esperaba pve').
 iniciar_partida(player):- 
-	empezado(0), retractall(empezado(_)), asserta(empezado(1)), 					% Comprobamos que no haya una partida iniciada y la iniciamos
+	empezado(0),  																	% Comprobamos que no haya una partida iniciada
 	modo(pve),																		% Comprobamos que el modo de juego es pve
 	idioma(L), cargar_diccionario(L),												% Cargamos el diccionario y las letras
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores	
-	asserta(puntuacion(player, 0)),	asserta(puntuacion(ordenador, 0)),				% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
 	(
 		ronda_inicial(player) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(ordenador))									% Comprobamos que la máquina empieza la partida y lo asignamos
 	),
-	crear_tablero,															% Creamos el tablero y lo mostramos por pantalla	
-	inicializar_fichas(player), inicializar_fichas(ordenador).					% Asignamos las fichas al jugador y la maquina y las mostramos por pantalla
+	crear_tablero,																% Creamos el tablero y lo mostramos por pantalla	
+	inicializar_fichas(player), inicializar_fichas(ordenador),					% Asignamos las fichas al jugador y la maquina y las mostramos por pantalla
+	asserta(puntuacion(player, 0)),	asserta(puntuacion(ordenador, 0)),			% Inicializamos la puntuación del jugador 1 y el jugador 2 (la máquina) a 0
+	retractall(empezado(_)), asserta(empezado(1)),								% Iniciamos la partida
+	mostrar_fichas(player), mostrar_fichas(ordenador).							% Mostramos las fichas de ambos jugadores
 
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
@@ -45,17 +47,19 @@ iniciar_partida(player):-
 iniciar_partida(_,_):- empezado(1), !, throw('Ya hay una partida iniciada').
 iniciar_partida(_,_):- modo(pve), !, throw('Modo de juego incorrecto, se esperaba pvp').
 iniciar_partida(player_1, player_2):- 
-	empezado(0), retractall(empezado(_)), asserta(empezado(1)),						% Comprobamos que no haya una partida iniciada y la iniciamos
+	empezado(0), 																	% Comprobamos que no haya una partida iniciada
 	modo(pvp), 																		% Comprobamos que el modo de juego es pvp
 	idioma(L), cargar_diccionario(L), 												% Cargamos el diccionario y las letras
 	retractall(puntuacion(_, _)), 													% Retractamos la puntuación de los jugadores
-	asserta(puntuacion(player_1 , 0)), asserta(puntuacion(player_2, 0)),			% Inicializamos la puntuación del jgador 1 y el jugador 2 a 0
 	(
-		ronda_inicial(player_1) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_1));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
+		ronda_inicial(player_1) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_1));			% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_2))										% Comprobamos que el jugador 2 empieza la partida y lo asignamos
 	),
-	crear_tablero,															% Creamos el tablero y lo mostramos por pantalla	
-	inicializar_fichas(player_1), inicializar_fichas(player_2).				% Asignamos las fichas al jugador 1 y al jugador 2 y las mostramos por pantalla
+	crear_tablero,																% Creamos el tablero y lo mostramos por pantalla	
+	inicializar_fichas(player_1), inicializar_fichas(player_2),					% Asignamos las fichas al jugador 1 y al jugador 2 y las mostramos por pantalla
+	asserta(puntuacion(player_1 , 0)), asserta(puntuacion(player_2, 0)),		% Inicializamos la puntuación del jgador 1 y el jugador 2 a 0
+	retractall(empezado(_)), asserta(empezado(1)),								% Iniciamos la partida
+	mostrar_fichas(player_1), mostrar_fichas(player_2).							% Mostramos las fichas de ambos jugadores		
 
 % Si hay una partida iniciada, abandonar_partida(+J) da la partida por perdida para el jugador J. Si no hay ninguna partida iniciada o bien el jugador J 
 % no está jugando, entonces la llamada termina en error.
@@ -134,38 +138,51 @@ asignar_fichas(_,F):- F>7, throw('El número de fichas no es válido').	% Compro
 
 asignar_fichas(J,F):- 
 	(
-		reparto(aleatorio) -> asignar_fichas_auto(J,F);						% Comprobamos que el modo de reparto es aleatorio y asignamos las fichas automáticamente
-		reparto(manual) -> asignar_fichas_manual(J,F)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
-	), mostrar_fichas(J),
+		reparto(aleatorio) -> obtener_fichas(F, J, Fichas);						% Comprobamos que el modo de reparto es aleatorio y asignamos las fichas automáticamente
+		reparto(manual) -> pedir_fichas_manual(F, Fichas)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
+	), 
+	retractall(fichas_jugador(J,_)), asserta(fichas_jugador(J,Fichas)),
+	mostrar_fichas(J),
 	(
-		F=[] -> abandonar_partida(J);										% Si no quedan más fichas, el jugador pierde
+		Fichas=[] -> abandonar_partida(J);										% Si no quedan más fichas, el jugador pierde
 		true
 	).
-% asignar_fichas_manual(+J,+F)
-%  tiene éxito si asigna las fichas necesarias al jugador J de forma automatica. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
-asignar_fichas_auto(J,F):-
-	obtener_fichas(F, J, Fichas), 								% Obtenemos las fichas que le faltan al jugador
-	retractall(fichas_jugador(J, _)), 							% Retractamos las fichas del jugador
-	asserta(fichas_jugador(J, Fichas)).							% Asignamos las fichas al jugador
-
-% asignar_fichas_manual(+J,+F)
-%  tiene éxito si asigna las fichas necesarias al jugador J de forma manual. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
-asignar_fichas_manual(J,F):-
-	true.
 
 % inicializar_fichas(+J) tiene éxito si inicializa las fichas del jugador J a 7 letras aleatorias.
 inicializar_fichas(J) :-
-    obtener_fichas(7, J, Fichas),
-    retractall(fichas_jugador(J,_)),
-    asserta(fichas_jugador(J,Fichas)),
-    mostrar_fichas(J).
+    (
+		reparto(aleatorio) -> obtener_fichas(7, J, Fichas);					% Comprobamos que el modo de reparto es aleatorio y asignamos las fichas automáticamente	
+		reparto(manual) -> pedir_fichas_manual(7, Fichas)						% Comprobamos que el modo de reparto es manual y asignamos las fichas manualmente
+	),
+	retractall(fichas_jugador(J,_)), asserta(fichas_jugador(J,Fichas)).
+
+% pedir_fichas_manual(+F,+Fichas)
+%  tiene éxito si pide al jugador J que elija las fichas que quiere. Si el número de letras a repartir es mayor que 7, entonces la llamada termina en error.
+pedir_fichas_manual(F, Fichas):- 
+	bolsa_letras(B),
+    format('Fichas disponibles en la bolsa: ~w~n', [B]),
+	format('Selecciona ~w letras separadas por comas (por ejemplo: a,b,c,...):~n', [F]),
+    read_line_to_string(user_input, Input),
+    split_string(Input, ",", " ", LS),
+    maplist(string_lower, LS, LL),
+    length(LL, N),
+	writeln(LL),
+    ( 
+		N =\= F -> throw('Número incorrecto de letras.'); 
+		\+letras_validas(LL) ->
+        	throw('Has elegido letras que no están disponibles en la bolsa.'); 
+		true
+    ),
+    LL = Fichas,
+	maplist(actualizar_letra_usada, Fichas).
+
 
 % obtener_fichas(+F,+J,-L) 
 % tiene éxito si L es una lista de F letras aleatorias que le faltan al jugador J. Si el número de letras a repartir es mayor que 7,
 % entonces la llamada termina en error. Si el número de letras a repartir es 0, entonces L es una lista vacía.
 obtener_fichas(F, _, _):- F>8, !, throw('El número de letras no es válido').		% Comprobamos que el número de letras a repartir es válido
 obtener_fichas(0, _, []):- !.												% Si el número de letras a repartir es 0, entonces L es una lista vacía
-obtener_fichas(F, J, L):- 
+obtener_fichas(F, J, L):-
 	F>0, F<8,
 	(
 		fichas_jugador(J, Fichas) -> true;									% Obtenemos las letras disponibles y las mezclamos aleatoriamente
