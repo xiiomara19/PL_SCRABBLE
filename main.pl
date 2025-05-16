@@ -1,3 +1,5 @@
+:- set_prolog_flag(encoding, utf8). 		% Establecer la codificación UTF-8 para la entrada y salida
+
 :- consult('diccionario.pl').					% Cargar el diccionario de palabras
 :- consult('configuracion.pl').					% Cargar la configuración del juego
 :- consult('tablero.pl').						% Cargar el tablero de juego
@@ -235,13 +237,27 @@ ver_ranking:-
 			P is 0
 		)
 	),
-	Estadisticas),											% Obtiene una lista de estadísticas de los jugadores
-	sort(4, @>=, Estadisticas, JOrdenados),					% Ordena la lista de jugadores por el porcentaje de victorias
+	EstadisticasV),											% Obtiene una lista de estadísticas de los jugadores
+	sort(4, @>=, EstadisticasV, RVictorias),					% Ordena la lista de jugadores por el porcentaje de victorias
 
-    forall(member((J, W, L, P), JOrdenados),
-        format('Jugador: ~w, Ganadas: ~w, Perdidas: ~w, Porcentaje: ~2f%~n', [J, W, L, P])).
+	writeln('Numero y porcentaje de victorias ordenados:'),	% Primera lista
+    forall(member(est(J, W, L, P), RVictorias),
+        format('Jugador: ~w, Ganadas: ~w, Perdidas: ~w, Porcentaje: ~2f%~n', [J, W, L, P])),
 
+	findall(est(J, MAX, MED),
+	(
+		member(J, Jugadores),
+		findall(P, historial_puntuaciones(J, P, _), Puntuaciones),
+		max_list(Puntuaciones, MAX),
+		mean_list(Puntuaciones, MED)
+	),
+	EstadisticasP),
 
+    sort(3, @>=, EstadisticasP, RPuntuacion),
+		
+	nl, writeln('Puntuacion maxima y media ordenados:'),	% Segunda lista
+	forall(member(est(J, MAX, MED), RPuntuacion),
+		format('Jugador: ~w, Maxima: ~w, Media: ~2f~n', [J, MAX, MED])).
 
 
 % jugar_A
