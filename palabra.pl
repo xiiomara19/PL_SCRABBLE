@@ -7,7 +7,7 @@
 %  Si hay una partida iniciada y es el turno del jugador J, formar_palabra(+J,+O,+F,+C,+P) introduce la palabra P en orientación O (horizontal o vertical) 
 % desde la fila F y la columna C y suma los puntos correspondientes al jugador J. Si no hay una partida iniciada, no es el turno del jugador J, la palabra 
 % P no encaja en orientación O desde la fila F y la columna C o bien el jugador J no dispone de las fichas necesarias para formar la palabra P, entonces la 
-% llamada finaliza en error.
+% llamada finaliza en error. El usuario tendrá que escribir tambien los caracteres que ya se encuentren en la tabla si son necesarios para formar la palabra.
 
 formar_palabra(_,_,_,_,_):- empezado(0), throw('No hay ninguna partida iniciada').
 %formar_palabra(J,_,_,_,_):- siguiente_ronda(P), P=\=J, throw('No es el turno del jugador J').
@@ -71,16 +71,19 @@ restar_comodines(A,F,R):-
 	B is A-1,
 	restar_comodines(B,I,R).
 
+% eliminar_si_posible(+L,+S,-R)
+% elimina de L los elementos de S si es que estan en L
+eliminar_si_posible(L,S,R):-
+    foldl(eliminar_si_existe,S,L,R).
 
-eliminar_si_posible(Lista, Sub, Resultado) :-
-    foldl(eliminar_si_existe, Sub, Lista, Resultado).
+% eliminar_si_existe(+E,+L,-R)
+% elimina E de L si es que existe y devuelve la lista resultante en R
+eliminar_si_existe(E,L,R):-
+    ( select(E,L,R) -> true; 
+	R = L ).
 
-eliminar_si_existe(Elem, Lista, Resultado) :-
-    ( select(Elem, Lista, Resultado) -> true; 
-	Resultado = Lista ).
 
-
-% contar_apariciones(E,L,C)
+% contar_apariciones(+E,+L,-C)
 % C guarda la cantidad de apariciones de E en L
 contar_apariciones(_,[],0).
 contar_apariciones(E,[E|R],C):-
@@ -90,7 +93,7 @@ contar_apariciones(E,[_|R],C):-
     contar_apariciones(E,R,C).
 
 
-%letras_en_tablero(+O,+F,+C,+L,?R)
+% letras_en_tablero(+O,+F,+C,+L,?R)
 % Recorre L posiciones del tablero desde (F,C) en la orientacion o y guarda 
 % todas las letras que se encuentren en R
 letras_en_tablero(h,F,C,L,R):-
@@ -135,8 +138,8 @@ letras_en_tablero(_,_,_,0,[]).
 
 
 
-% usa_letra(O,F,C,L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
-% en la posicion correspondiente
+% usa_letra(+O,+F,+C,+L) comprueba que en la posicion (F,C) del tablero B haya al menos una ocurrencia de alguna de las letras que aparecen en L 
+% en la posicion correspondiente o el simbolo * para el inicio de la partida
 usa_letra(h,F,C,[H|T]):-
 	(
 		get_cell(F,C,H)->true;
@@ -151,7 +154,7 @@ usa_letra(v,F,C,[H|T]):-
 	).
 usa_letra(_,_,_,[]):- throw('Tienes que usar una letra del tablero').
 
-% comprobar_limites(P, L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
+% comprobar_limites(+P,+L) comprueba que se puede escribir en la posicion P teniendo en cuenta que se va a desplazar L veces
 comprobar_limites(P,L):- P >= 0, A is P+L, A<16,!.
 comprobar_limites(_,_):- throw('Supera los limites del tablero').
 

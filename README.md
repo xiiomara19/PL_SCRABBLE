@@ -67,16 +67,19 @@
 - [x] mostrar_item(+C)
 - [x] actualizar_tablero(+O,+F,+C,+L)
 
-### logica.pl
+### palabra.pl
 
-- [ ] formar_palabra(+J,+O,+F,+C,+P)
-- [ ] escribir_final_ronda(+P,+Puntos,+F)
-- [ ] puede_escribir(+O,+F,+C,+L,+Fichas,-Fichas_restantes)
-- [ ] eliminar_si_posible -> FALTA DESCRIPCIÓN
+- [x] formar_palabra(+J,+O,+F,+C,+P)
+- [x] escribir_final_ronda(+P,+Puntos,+F)
+- [x] puede_escribir(+O,+F,+C,+L,+Fichas,-Fichas_restantes)
+- [x] restar_comodines(+A,+F,-R)
+- [x] eliminar_si_posible(+L,+S,-R)
+- [x] eliminar_si_existe(+E,+L,-R)
+- [x] contar_apariciones(+E,+L,-C)
 - [x] letras_en_tablero(+O,+F,+C,+L,?R)
-- [ ] usa_letra(O,F,C,B,L)
-- [ ] comprobar_limites(P, L)
-- [ ] comprobar_si_encaja(+O,+F,+C,+B,+L)
+- [x] usa_letra(O,F,C,B,L)
+- [x] comprobar_limites(+P,+L)
+- [x] comprobar_si_encaja(+J,+O,+F,+C,+L,+M,+P)
 - [x] multiplicador_letra(?C,?V)
 - [x] multiplicador_palabra(?C,?V)
 - [x] celdas_posibles(-L)
@@ -87,8 +90,3 @@
 - Añadir mensajes de error
 - Hacer retract de todo al finalizar
 - Jueguen los jugadores (play_A, play_B, play_maquina)
-- Ganar/perder
-- Comodines
-- Docu
-- añadir comentario en formar_palabra (reno)
-- comentario de error de posicion incorrecta cuando es la primera palabra a formar
