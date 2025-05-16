@@ -14,7 +14,7 @@ cargar_diccionario(L):-
 	obtener_lineas(Stream, Lineas),
 	close(Stream), !,
 	retractall(diccionario(_)),												% Limpiar el diccionario actual	
-	retractall(char_puntos(_,_)),						
+	retractall(char_puntos_apariciones(_,_,_)),						
 	asserta(diccionario(Lineas)),											% Cargar el archivo de palabras
 	atomic_list_concat(['./diccionario/letras/letras_', L, '.pl'], Caracteres),			% Crear el nombre del archivo de letras
 	consult(Caracteres).													% Cargar el archivo de letras

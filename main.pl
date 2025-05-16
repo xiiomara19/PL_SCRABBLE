@@ -77,12 +77,16 @@ abandonar_partida(J):-
 			format('El jugador ~w ha ganado la partida.~n', [Ganador]),					% Mostramos quién gana
 			puntuacion(Ganador, P1), puntuacion(J, P2),									% Obtenemos la puntuación de ambos jugadores
 			assertz(historial_puntuaciones(Ganador, P1, w)),							% Añadimos el historial de puntuaciones del jugador ganador
-			assertz(historial_puntuaciones(J, P2, l))								% Añadimos el historial de puntuaciones del jugador perdedor
+			assertz(historial_puntuaciones(J, P2, l)),									% Añadimos el historial de puntuaciones del jugador perdedor
+			retractall(fichas_jugador(J,_)), 
+			retractall(fichas_jugador(Ganador,_))										% Retractamos las fichas de los jugadores
 		;
 			modo(pve), writeln('El ordenador ha ganado la partida.'),
 			puntuacion(ordenador, P1), puntuacion(player, P2),						% Obtenemos la puntuación de ambos jugadores
 			assertz(historial_puntuaciones(ordenador, P1, w)),						% Añadimos el historial de puntuaciones del jugador ganador
-			assertz(historial_puntuaciones(player, P2, l))							% Añadimos el historial de puntuaciones del jugador perdedor
+			assertz(historial_puntuaciones(player, P2, l)),							% Añadimos el historial de puntuaciones del jugador perdedor
+			retractall(fichas_jugador(player,_)),
+			retractall(fichas_jugador(ordenador,_))									% Retractamos las fichas de los jugadores
 	),
 	retractall(puntuacion(_, _)), 														% Retractamos la puntuación de los jugadores	
 	(
@@ -177,9 +181,10 @@ pedir_fichas_manual(F,J,L):-
 	maplist(atom_string, LP, LString),
     length(LP, N),
     ( 
-		N =\= F -> throw('Número incorrecto de letras.'); 
+		N =\= F -> writeln('Número incorrecto de letras.'), pedir_fichas_manual(F,J,L); 
 		\+letras_validas(LP,B) ->
-        	throw('Has elegido letras que no están disponibles en la bolsa.'); 
+        	writeln('Has elegido letras que no están disponibles en la bolsa.'),
+			pedir_fichas_manual(F,J,L); 
 		true
     ),
 	maplist(actualizar_letra_usada, LP),										% Actualizamos la bolsa de letras	
@@ -385,38 +390,3 @@ validar_palabra(P):-
 	diccionario(D), 
 	member(P, D), !.
 validar_palabra(_):- throw('La palabra no existe en el diccionario').
-
-% validar_fichas_palabra (tiene las fichas necesarias para formar la palabra)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-puede_formarse_con_comodin([], _).
-puede_formarse_con_comodin([L|Resto], LetrasDisponibles) :-
-    (   select(L, LetrasDisponibles, RestoLetras)
-    ->  true
-    ;   select('_', LetrasDisponibles, RestoLetras)  % Usa un comodín si la letra no está
-    ),
-    puede_formarse_con_comodin(Resto, RestoLetras).
-
-palabra_formable(LetrasDisponibles, Palabra) :-
-    diccionario(Palabra),
-    atom_chars(Palabra, LetrasPalabra),
-    puede_formarse_con_comodin(LetrasPalabra, LetrasDisponibles).
-
-palabra_valida_aleatoria(Letras, Palabra) :-
-    setof(P, palabra_formable(Letras, P), Palabras),
-    random_member(Palabra, Palabras).
