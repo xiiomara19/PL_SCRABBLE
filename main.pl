@@ -144,7 +144,12 @@ asignar_fichas(J,F):-
 	retractall(fichas_jugador(J,_)), asserta(fichas_jugador(J,Fichas)),
 	mostrar_fichas(J),
 	(
-		Fichas=[] -> abandonar_partida(J);										% Si no quedan más fichas, el jugador pierde
+		Fichas=[] -> 
+			puntuacion(J,P1), otro_jugador(J,J2), puntuacion(J2,P2),
+			(																					% Si no quedan más fichas, el jugador pierde
+				P1<P2 -> abandonar_partida(J);
+				P1>P2 -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(J2)), abandonar_partida(J2);
+			);												
 		true
 	).
 
