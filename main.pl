@@ -34,8 +34,8 @@ iniciar_partida(player):-
 		ronda_inicial(player) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(ordenador))									% Comprobamos que la máquina empieza la partida y lo asignamos
 	),
-	inicializar_fichas(player), inicializar_fichas(ordenador),					% Asignamos las fichas al jugador y la maquina y las mostramos por pantalla
-	crear_tablero.															% Creamos el tablero y lo mostramos por pantalla	
+	crear_tablero,															% Creamos el tablero y lo mostramos por pantalla	
+	inicializar_fichas(player), inicializar_fichas(ordenador).					% Asignamos las fichas al jugador y la maquina y las mostramos por pantalla
 
 % iniciar_partida(+J1,+J2) (modo persona vs persona) da inicio a una nueva partida de los jugadores J1 y J2 con la configuración actual. Si ya había una 
 % partida iniciada, entonces la llamada termina en error.
@@ -52,8 +52,8 @@ iniciar_partida(player_1, player_2):-
 		ronda_inicial(player_1) -> retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_1));		% Comprobamos que el jugador 1 empieza la partida y lo asignamos
 		retractall(siguiente_ronda(_)), asserta(siguiente_ronda(player_2))										% Comprobamos que el jugador 2 empieza la partida y lo asignamos
 	),
-	inicializar_fichas(player_1), inicializar_fichas(player_2),				% Asignamos las fichas al jugador 1 y al jugador 2 y las mostramos por pantalla
-	crear_tablero.															% Creamos el tablero y lo mostramos por pantalla	
+	crear_tablero,															% Creamos el tablero y lo mostramos por pantalla	
+	inicializar_fichas(player_1), inicializar_fichas(player_2).				% Asignamos las fichas al jugador 1 y al jugador 2 y las mostramos por pantalla
 
 % Si hay una partida iniciada, abandonar_partida(+J) da la partida por perdida para el jugador J. Si no hay ninguna partida iniciada o bien el jugador J 
 % no está jugando, entonces la llamada termina en error.
@@ -64,8 +64,7 @@ abandonar_partida(J):- \+siguiente_ronda(J), !, throw('No es el turno del jugado
 abandonar_partida(J):- 
 	empezado(1), retractall(empezado(_)), asserta(empezado(0)),							% Comprobamos que hay una partida iniciada y la terminamos
 	siguiente_ronda(J),		 															% Comprobamos que el jugador J tiene el turno
-	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 						% Indicamos que la siguiente ronda es el final de la partida
-	retractall(puntuacion(_, _)), 														% Retractamos la puntuación de los jugadores						 
+	retractall(siguiente_ronda(_)), asserta(siguiente_ronda(end)), 						% Indicamos que la siguiente ronda es el final de la partida					 
 	(
 		modo(pvp) ->
 			otro_jugador(J, Ganador),
@@ -74,11 +73,12 @@ abandonar_partida(J):-
 			assertz(historial_puntuaciones(Ganador, P1, w)),							% Añadimos el historial de puntuaciones del jugador ganador
 			assertz(historial_puntuaciones(J, P2, l))								% Añadimos el historial de puntuaciones del jugador perdedor
 		;
-			writeln('La máquina ha ganado la partida.'),
+			modo(pve), writeln('El ordenador ha ganado la partida.'),
 			puntuacion(ordenador, P1), puntuacion(player, P2),						% Obtenemos la puntuación de ambos jugadores
 			assertz(historial_puntuaciones(ordenador, P1, w)),						% Añadimos el historial de puntuaciones del jugador ganador
 			assertz(historial_puntuaciones(player, P2, l))							% Añadimos el historial de puntuaciones del jugador perdedor
 	),
+	retractall(puntuacion(_, _)), 														% Retractamos la puntuación de los jugadores	
 	(
 		empieza(0) -> retractall(ronda_inicial(_)), asserta(ronda_inicial(player_1));							% Comprobamos que el modo de juego es normal y asignamos el inicio de la partida al jugador 1
 		empieza(1), ronda_inicial(player_1) -> retractall(ronda_inicial(_)), asserta(ronda_inicial(player_2));	% Comprobamos que el modo de juego es alterno y asignamos el inicio de la partida al jugador 2

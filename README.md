@@ -86,3 +86,5 @@
 - Ver_ranking
 - Comodines
 - Docu
+- añadir comentario en formar_palabra (reno)
+- comentario de error de posicion incorrecta cuando es la primera palabra a formar
