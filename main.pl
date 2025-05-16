@@ -14,7 +14,7 @@
 			fichas_jugador/2.			% Guarda el nombre del jugador y sus fichas
 
 % Opciones de configuración iniciales del juego
-:- assertz(ronda_inicial(player)).		% Jugador que empieza la partida: player
+:- assertz(ronda_inicial(player_1)).		% Jugador que empieza la partida: player
 :- assertz(siguiente_ronda(end)).		% Jugador que tiene el turno: player, ordenador, player_1, player_2 o end (partida finalizada)
 :- assertz(empezado(0)).				% Indica que la partida todavia no ha empezado
 
